@@ -1,0 +1,7 @@
+{
+  "name": "Kalita Spectrum - Premium Dining Experience",
+  "description": "A high-conversion, modern restaurant website for Kalita Spectrum, featuring an AI-powered taste concierge, seamless bookings, and a mobile-first premium design.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
