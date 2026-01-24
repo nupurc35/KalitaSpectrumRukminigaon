@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { MENU_ITEMS, MENU_LINKS } from '../constants';
+import { MENU_ITEMS, MENU_LINKS, WHATSAPP_LINK } from '../constants';
 
 const Menu: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<string>('Everything');
@@ -90,9 +90,16 @@ const Menu: React.FC = () => {
           ))}
         </div>
         
-        <div className="mt-16 text-center">
-            <p className="text-primary/40 text-xs mb-6 font-medium uppercase tracking-[0.2em]">Our full menu contains over 150+ delicacies</p>
-            <a href="#book" className="inline-block bg-primary text-white px-12 py-4 rounded-full font-bold uppercase tracking-widest hover:bg-secondary transition-all shadow-xl">Book Your Table</a>
+        <div className="mt-16 text-center space-y-6">
+            <p className="text-primary/40 text-xs font-medium uppercase tracking-[0.2em]">Our full menu contains over 150+ delicacies</p>
+            <a 
+              href={WHATSAPP_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-primary text-white px-12 py-4 rounded-full font-bold uppercase tracking-widest hover:bg-secondary transition-all shadow-xl"
+            >
+              Reserve a Table
+            </a>
         </div>
       </div>
     </section>

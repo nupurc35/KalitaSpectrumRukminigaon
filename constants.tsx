@@ -4,6 +4,7 @@ import { MenuItem, Review } from './types';
 export const RESTAURANT_NAME = "Kalita Spectrum";
 export const ADDRESS = "GS Rd, Opp. Pantaloons, Rukmini Gaon, Guwahati, Assam 781006";
 export const PHONE = "+91 91270 70050";
+export const WHATSAPP_LINK = "https://wa.me/919127070050?text=Hi%2C%20I'd%20like%20to%20reserve%20a%20table%20at%20Kalita%20Spectrum.";
 export const GOOGLE_RATING = 4.4;
 export const REVIEW_COUNT = "6,422";
 

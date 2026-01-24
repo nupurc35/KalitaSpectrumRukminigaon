@@ -1,18 +1,18 @@
 
 import React from 'react';
-import { RESTAURANT_NAME, GOOGLE_RATING, REVIEW_COUNT } from '../constants';
+import { RESTAURANT_NAME, GOOGLE_RATING, REVIEW_COUNT, WHATSAPP_LINK } from '../constants';
 
 const Hero: React.FC = () => {
   return (
     <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
-      {/* Background Image with Overlay */}
+      {/* Background Image: Aerial Forest Resort (Matches user-provided image) */}
       <div className="absolute inset-0 z-0">
         <img 
-          src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=2000" 
+          src="https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&q=80&w=2000" 
           className="w-full h-full object-cover"
-          alt="Luxury Restaurant Interior"
+          alt="Luxury Forest Resort Aerial View"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/80 via-primary/50 to-primary"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/70 via-primary/40 to-primary"></div>
       </div>
 
       <div className="relative z-10 text-center px-6 max-w-4xl">
@@ -26,21 +26,23 @@ const Hero: React.FC = () => {
         </h1>
         
         <p className="text-lg md:text-xl text-white/80 mb-10 max-w-2xl mx-auto font-light leading-relaxed">
-          {RESTAURANT_NAME} brings a refined fusion of authentic Indian heritage and global culinary artistry to the heart of Guwahati.
+          {RESTAURANT_NAME} brings a refined fusion of authentic Indian heritage and global culinary artistry to a serene, natural sanctuary.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <a 
             href="#menu" 
-            className="w-full sm:w-auto bg-secondary text-primary px-10 py-4 rounded-full text-lg font-bold transition-all hover:scale-105 active:scale-95 shadow-xl shadow-secondary/20"
+            className="w-full sm:w-auto bg-white/10 backdrop-blur-md text-white border border-white/20 px-10 py-4 rounded-full text-lg font-medium hover:bg-white/20 transition-all"
           >
             Experience the Flavors
           </a>
           <a 
-            href="#book" 
-            className="w-full sm:w-auto bg-white/10 backdrop-blur-md text-white border border-white/20 px-10 py-4 rounded-full text-lg font-medium hover:bg-white/20 transition-all"
+            href={WHATSAPP_LINK}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full sm:w-auto bg-secondary text-primary px-10 py-4 rounded-full text-lg font-bold transition-all hover:scale-105 active:scale-95 shadow-xl shadow-secondary/20"
           >
-            Book a Table
+            Reserve a Table
           </a>
         </div>
       </div>
