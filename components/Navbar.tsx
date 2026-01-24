@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { RESTAURANT_NAME, WHATSAPP_LINK } from '../constants';
+import { RESTAURANT_NAME } from '../constants';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -18,32 +18,7 @@ const Navbar: React.FC = () => {
           {RESTAURANT_NAME.split(' ')[0]} <span className="text-secondary">{RESTAURANT_NAME.split(' ')[1]}</span>
         </div>
         
-        <div className="hidden md:flex space-x-8 text-sm font-medium tracking-wide uppercase items-center">
-          <a href="#menu" className="hover:text-secondary transition-colors">Menu</a>
-          <a href="#about" className="hover:text-secondary transition-colors">Experience</a>
-          <a href="#location" className="hover:text-secondary transition-colors">Location</a>
-          <a href="#reviews" className="hover:text-secondary transition-colors">Reviews</a>
-          <a 
-            href={WHATSAPP_LINK}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-secondary text-primary px-5 py-2 rounded-full text-[10px] font-bold tracking-widest hover:bg-white transition-all shadow-lg"
-          >
-            Reserve a Table
-          </a>
-        </div>
-        
-        {/* Mobile simple view if needed, but keeping desktop focus for now */}
-        <div className="md:hidden">
-           <a 
-            href={WHATSAPP_LINK}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-secondary text-primary px-4 py-2 rounded-full text-[9px] font-bold tracking-widest"
-          >
-            Reserve
-          </a>
-        </div>
+        {/* Navigation links and buttons removed per request */}
       </div>
     </nav>
   );

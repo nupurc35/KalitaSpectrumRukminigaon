@@ -1,60 +1,58 @@
 
-import React, { useState } from 'react';
-import { MENU_ITEMS, MENU_LINKS, WHATSAPP_LINK } from '../constants';
+import React, { useState, useEffect } from 'react';
+import { MENU_ITEMS, WHATSAPP_LINK } from '../constants';
 
 const Menu: React.FC = () => {
-  const [activeCategory, setActiveCategory] = useState<string>('Everything');
-  
   const categories = [
-    'Everything',
-    'Main Menu',
-    'Continental Grills',
-    'Oriental Delights',
-    'Beverage Bar',
+    'Appetizers',
+    'Soups',
+    'Main Course',
     'Desserts'
-  ];
+  ] as const;
 
-  const filteredItems = activeCategory === 'Everything' 
-    ? MENU_ITEMS 
-    : MENU_ITEMS.filter(item => item.category === activeCategory);
+  const subCategoriesMap: Record<string, string[]> = {
+    'Appetizers': ['Indian', 'Continental'],
+    'Main Course': ['Indian', 'Around the World'],
+  };
+
+  const [activeCategory, setActiveCategory] = useState<typeof categories[number]>(categories[0]);
+  const [activeSubCategory, setActiveSubCategory] = useState<string | null>(null);
+
+  // Set default subcategory when category changes
+  useEffect(() => {
+    if (subCategoriesMap[activeCategory]) {
+      setActiveSubCategory(subCategoriesMap[activeCategory][0]);
+    } else {
+      setActiveSubCategory(null);
+    }
+  }, [activeCategory]);
+
+  const filteredItems = MENU_ITEMS.filter(item => {
+    const categoryMatch = item.category === activeCategory;
+    if (activeSubCategory) {
+      return categoryMatch && item.subCategory === activeSubCategory;
+    }
+    return categoryMatch;
+  });
 
   return (
     <section id="menu" className="py-24 px-6 bg-accent text-primary scroll-mt-24">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <span className="text-secondary uppercase text-xs font-bold tracking-[0.3em] mb-4 block">Our Culinary Spectrum</span>
-          <h2 className="text-4xl md:text-6xl font-serif mb-6 italic">A World on a Plate</h2>
-          <p className="text-primary/60 text-lg max-w-2xl mx-auto">From the heart of Assam to the streets of Asia and the bistros of Europe. Explore our diverse menu selections.</p>
+          <span className="text-secondary uppercase text-xs font-bold tracking-[0.3em] mb-4 block">Our Culinary Selection</span>
+          <h2 className="text-4xl md:text-6xl font-serif mb-6 italic">Taste the Spectrum</h2>
+          <p className="text-primary/60 text-lg max-w-2xl mx-auto">Handcrafted delicacies prepared with authentic ingredients and modern culinary techniques.</p>
         </div>
 
-        {/* Visual Menu Quick Links */}
-        <div className="mb-16">
-          <p className="text-[10px] uppercase font-bold tracking-widest text-primary/40 text-center mb-6">Digital Menu Archives (Google Maps Photos)</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {MENU_LINKS.map((link) => (
-              <a 
-                key={link.label}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-primary text-white p-4 rounded-2xl text-[10px] font-bold uppercase tracking-widest text-center hover:bg-secondary transition-all hover:-translate-y-1 shadow-md flex flex-col items-center justify-center space-y-2 border border-white/5"
-              >
-                <svg className="w-5 h-5 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                <span>{link.label}</span>
-              </a>
-            ))}
-          </div>
-        </div>
-
-        {/* Category Tabs */}
-        <div className="flex flex-wrap justify-center gap-2 mb-12">
+        {/* Primary Category Tabs */}
+        <div className="flex flex-wrap justify-center gap-3 mb-8">
           {categories.map(cat => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-6 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-widest transition-all ${
+              className={`px-8 py-3 rounded-full text-[12px] font-bold uppercase tracking-widest transition-all ${
                 activeCategory === cat 
-                  ? 'bg-primary text-white shadow-lg scale-105' 
+                  ? 'bg-primary text-white shadow-xl scale-105' 
                   : 'bg-white text-primary hover:bg-primary/5 border border-primary/10'
               }`}
             >
@@ -62,6 +60,26 @@ const Menu: React.FC = () => {
             </button>
           ))}
         </div>
+
+        {/* Secondary Subcategory Tabs */}
+        {subCategoriesMap[activeCategory] && (
+          <div className="flex justify-center gap-4 mb-12 animate-in fade-in slide-in-from-top-2 duration-500">
+            {subCategoriesMap[activeCategory].map(sub => (
+              <button
+                key={sub}
+                onClick={() => setActiveSubCategory(sub)}
+                className={`flex items-center space-x-2 px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border ${
+                  activeSubCategory === sub
+                    ? 'border-secondary bg-secondary/10 text-secondary'
+                    : 'border-primary/10 bg-transparent text-primary/40 hover:text-primary'
+                }`}
+              >
+                <div className={`w-1.5 h-1.5 rounded-full ${activeSubCategory === sub ? 'bg-secondary' : 'bg-primary/20'}`}></div>
+                <span>{sub}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Menu Grid */}
         <div className="grid md:grid-cols-2 gap-8 min-h-[400px]">
@@ -79,10 +97,16 @@ const Menu: React.FC = () => {
                   <h3 className="text-xl font-bold font-serif">{item.name}</h3>
                   <span className="text-secondary font-bold">{item.price}</span>
                 </div>
-                <p className="text-primary/60 text-sm leading-relaxed line-clamp-2 italic mb-2">
-                  {item.category}
+                <p className="text-primary/40 text-[10px] uppercase font-bold tracking-widest mb-2 flex items-center">
+                  <span className="opacity-50">{item.category}</span>
+                  {item.subCategory && (
+                    <>
+                      <span className="mx-2 opacity-30">/</span>
+                      <span className="text-secondary">{item.subCategory}</span>
+                    </>
+                  )}
                 </p>
-                <p className="text-primary/50 text-xs leading-relaxed line-clamp-2">
+                <p className="text-primary/60 text-xs leading-relaxed italic">
                   {item.description}
                 </p>
               </div>
@@ -90,8 +114,7 @@ const Menu: React.FC = () => {
           ))}
         </div>
         
-        <div className="mt-16 text-center space-y-6">
-            <p className="text-primary/40 text-xs font-medium uppercase tracking-[0.2em]">Our full menu contains over 150+ delicacies</p>
+        <div className="mt-16 text-center">
             <a 
               href={WHATSAPP_LINK}
               target="_blank"

@@ -3,9 +3,9 @@ import React, { useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Menu from './components/Menu';
+import Gallery from './components/Gallery';
 import Reviews from './components/Reviews';
 import Footer from './components/Footer';
-import ChatConcierge from './components/ChatConcierge';
 import { RESTAURANT_NAME, MAP_LINK, MAP_EMBED_URL, ADDRESS, PHONE } from './constants';
 
 const App: React.FC = () => {
@@ -73,6 +73,10 @@ const App: React.FC = () => {
         </section>
 
         <div className="scroll-reveal opacity-0 translate-y-10 transition-all duration-1000 ease-out">
+          <Gallery />
+        </div>
+
+        <div className="scroll-reveal opacity-0 translate-y-10 transition-all duration-1000 ease-out">
           <Reviews />
         </div>
 
@@ -122,7 +126,6 @@ const App: React.FC = () => {
       </main>
 
       <Footer />
-      <ChatConcierge />
     </div>
   );
 };

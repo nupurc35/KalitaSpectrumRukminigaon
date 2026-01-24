@@ -4,7 +4,8 @@ export interface MenuItem {
   name: string;
   description: string;
   price: string;
-  category: 'Main Menu' | 'Continental Grills' | 'Oriental Delights' | 'Beverage Bar' | 'Desserts';
+  category: 'Main Course' | 'Appetizers' | 'Soups' | 'Desserts';
+  subCategory?: 'Indian' | 'Around the World' | 'Continental';
   image: string;
 }
 
