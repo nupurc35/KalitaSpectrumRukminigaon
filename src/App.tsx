@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
+import ReservationForm from "./components/ReservationForm";
 import Menu from './components/Menu';
 import Gallery from './components/Gallery';
 import Reviews from './components/Reviews';
@@ -30,6 +31,11 @@ const App: React.FC = () => {
       
       <main>
         <Hero />
+   <section className="w-full bg-slate-900 py-24">
+         <div className="max-w-4xl mx-auto px-6">
+              <ReservationForm />
+         </div>
+  </section>
         
         <div className="scroll-reveal opacity-0 translate-y-10 transition-all duration-1000 ease-out">
           <Menu />

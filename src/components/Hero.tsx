@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { RESTAURANT_NAME, GOOGLE_RATING, REVIEW_COUNT, WHATSAPP_LINK } from '../constants';
-
+import WhatsAppButton from "./WhatsAppButton";
 const Hero: React.FC = () => {
   return (
     <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
@@ -53,6 +53,7 @@ const Hero: React.FC = () => {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
         </svg>
       </div>
+    <WhatsAppButton />
     </section>
   );
 };
