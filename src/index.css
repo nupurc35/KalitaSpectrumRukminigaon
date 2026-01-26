@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== Custom input focus style ===== */
+@layer components {
+  .partwright-input {
+    @apply w-full rounded-lg border border-gray-300 px-4 py-3
+           text-gray-900 placeholder-gray-400
+           transition-all duration-200;
+  }
+
+  .partwright-input:focus {
+    @apply outline-none ring-2 ring-[#25D366] border-[#25D366];
+  }
+} 
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 100px; /* Prevents content from hiding under fixed headers */
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

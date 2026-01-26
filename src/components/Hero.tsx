@@ -31,18 +31,16 @@ const Hero: React.FC = () => {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <a 
-            href="#menu" 
+            href="#reservation-section" 
             className="w-full sm:w-auto bg-white/10 backdrop-blur-md text-white border border-white/20 px-10 py-4 rounded-full text-lg font-medium hover:bg-white/20 transition-all"
           >
-            Experience the Flavors
+            Reserve a Table
           </a>
           <a 
-            href={WHATSAPP_LINK}
-            target="_blank"
-            rel="noopener noreferrer"
+            href="#menu"
             className="w-full sm:w-auto bg-secondary text-primary px-10 py-4 rounded-full text-lg font-bold transition-all hover:scale-105 active:scale-95 shadow-xl shadow-secondary/20"
           >
-            Reserve a Table
+            View Menu
           </a>
         </div>
       </div>

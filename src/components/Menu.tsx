@@ -46,6 +46,7 @@ const Menu: React.FC = () => {
 
         {/* Primary Category Tabs */}
         <div className="flex flex-wrap justify-center gap-3 mb-8">
+          
           {categories.map(cat => (
             <button
               key={cat}
@@ -82,10 +83,24 @@ const Menu: React.FC = () => {
         )}
 
         {/* Menu Grid */}
-        <div className="grid md:grid-cols-2 gap-8 min-h-[400px]">
+     {   <div className="grid md:grid-cols-2 gap-8 min-h-[400px]">
+          
           {filteredItems.map(item => (
-            <div key={item.id} className="group bg-white p-5 rounded-[2rem] shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col sm:flex-row gap-6 border border-primary/5">
+            <div key={item.id} className="relative group bg-white p-5 rounded-[2rem] shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col sm:flex-row gap-6 border border-primary/5">
+                <div className="absolute top-8 left-8 z-10 flex gap-2">
+               {item.featured && (<span className="text-[9px] uppercase font-semibold tracking-[0.18em]
+      px-3 py-1 rounded-full bg-secondary text-white">Chef’s Special </span>
+  )}
+        {item.highMargin && (
+              <span className="text-[9px] uppercase font-semibold tracking-[0.18em]
+      px-3 py-1 rounded-full bg-emerald-500 text-white">
+                Recommended
+            </span>
+  )}
+            </div>
+              
               <div className="sm:w-40 h-40 flex-shrink-0 overflow-hidden rounded-2xl bg-accent">
+
                 <img 
                   src={item.image} 
                   alt={item.name} 
@@ -95,7 +110,12 @@ const Menu: React.FC = () => {
               <div className="flex-1 flex flex-col justify-center">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="text-xl font-bold font-serif">{item.name}</h3>
-                  <span className="text-secondary font-bold">{item.price}</span>
+                  <span className="text-secondary font-bold">{item.price}</span> 
+                   {item.highMargin && (
+                    <p className="text-[11px] text-emerald-600 italic mt-1">
+                        Guest favorite
+                    </p>
+)}
                 </div>
                 <p className="text-primary/40 text-[10px] uppercase font-bold tracking-widest mb-2 flex items-center">
                   <span className="opacity-50">{item.category}</span>
@@ -112,14 +132,17 @@ const Menu: React.FC = () => {
               </div>
             </div>
           ))}
-        </div>
+
+
+
+
+        </div>  }
+        
         
         <div className="mt-16 text-center">
             <a 
-              href={WHATSAPP_LINK}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block bg-primary text-white px-12 py-4 rounded-full font-bold uppercase tracking-widest hover:bg-secondary transition-all shadow-xl"
+              href="#reservation-section"
+              className="inline-block bg-primary text-white px-12 py-4 rounded-full font-bold uppercase tracking-widest transition-all duration-300 hover:bg-secondary hover:shadow-xl hover:-translate-y-1"
             >
               Reserve a Table
             </a>

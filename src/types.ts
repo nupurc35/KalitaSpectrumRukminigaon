@@ -7,6 +7,8 @@ export interface MenuItem {
   category: 'Main Course' | 'Appetizers' | 'Soups' | 'Desserts';
   subCategory?: 'Indian' | 'Around the World' | 'Continental';
   image: string;
+  featured?: boolean;     // ⭐ Chef’s Special
+  highMargin?: boolean;   // 💰 Restaurant profit focus
 }
 
 export interface Review {

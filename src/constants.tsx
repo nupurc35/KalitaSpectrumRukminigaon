@@ -4,9 +4,10 @@ import { MenuItem, Review } from './types';
 export const RESTAURANT_NAME = "Kalita Spectrum";
 export const ADDRESS = "GS Rd, Opp. Pantaloons, Rukmini Gaon, Guwahati, Assam 781006";
 export const PHONE = "+91 91270 70050";
-export const WHATSAPP_LINK = "https://wa.me/919127070050?text=Hi%2C%20I'd%20like%20to%20reserve%20a%20table%20at%20Kalita%20Spectrum.";
+export const WHATSAPP_LINK = "https://wa.me/918453708792?text=Hi%2C%20I'd%20like%20to%20reserve%20a%20table%20at%20Kalita%20Spectrum.";
 export const GOOGLE_RATING = 4.4;
 export const REVIEW_COUNT = "6,422";
+export const GOOGLE_REVIEW_URL = "https://www.google.com/maps/place/Kalita+Spectrum/@26.1362733,91.7998816,17z/data=!4m8!3m7!1s0x375a58d001a8eed9:0xf12d300a9632bf09!8m2!3d26.1362685!4d91.8024565!9m1!1b1!16s%2Fg%2F11hbgt3_lv?entry=ttu&g_ep=EgoyMDI2MDEyMS4wIKXMDSoKLDEwMDc5MjA2OUgBUAM%3D";
 
 export const MENU_LINKS = [
   { label: "Main Menu", url: "https://maps.app.goo.gl/Pw118eEj5D6d8ghA8" },
@@ -29,7 +30,9 @@ export const MENU_ITEMS: MenuItem[] = [
     price: '₹420',
     category: 'Appetizers',
     subCategory: 'Indian',
-    image: 'https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&q=80&w=800'
+    image: 'https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&q=80&w=800',
+    featured: true,
+    highMargin: true,
   },
   {
     id: 'api2',
@@ -38,8 +41,9 @@ export const MENU_ITEMS: MenuItem[] = [
     price: '₹445',
     category: 'Appetizers',
     subCategory: 'Indian',
-    image: 'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?auto=format&fit=crop&q=80&w=800'
-  },
+    image: 'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?auto=format&fit=crop&q=80&w=800',
+    featured: true,
+},
   // Appetizers - Continental
   {
     id: 'apc1',
@@ -133,19 +137,4 @@ export const MENU_ITEMS: MenuItem[] = [
   }
 ];
 
-export const REVIEWS: Review[] = [
-  {
-    id: 'r1',
-    author: 'Anjali Sharma',
-    rating: 5,
-    comment: 'Exceptional variety! The North Indian mains are heart-warming and the service is impeccable.',
-    date: '2 weeks ago'
-  },
-  {
-    id: 'r2',
-    author: 'David Wright',
-    rating: 5,
-    comment: 'The Continental grills here are the best in the city. Perfectly seasoned and great portion sizes.',
-    date: '1 month ago'
-  }
-];
+
