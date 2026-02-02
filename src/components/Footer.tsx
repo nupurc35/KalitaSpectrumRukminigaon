@@ -38,7 +38,16 @@ const Footer: React.FC = () => {
             </ul>
           </div>
         </div>
-
+        <div className="w-full h-48">
+       <h4 className="font-semibold mb-2">Find Us</h4>
+    <iframe
+       title="Google Map"
+       src="https://www.google.com/maps/place/Kalita+Spectrum/@26.1362685,91.8024565,17z/data=!3m1!4b1!4m6!3m5!1s0x375a58d001a8eed9:0xf12d300a9632bf09!8m2!3d26.1362685!4d91.8024565!16s%2Fg%2F11hbgt3_lv?entry=ttu&g_ep=EgoyMDI2MDEyOC4wIKXMDSoKLDEwMDc5MjA2OUgBUAM%3D"
+       className="w-full h-full rounded-md"
+       loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+     />
+        </div>
         <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
           <p className="text-[10px] text-white/30 uppercase tracking-[0.2em]">
             &copy; {new Date().getFullYear()} {RESTAURANT_NAME}. All Rights Reserved.

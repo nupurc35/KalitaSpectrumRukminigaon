@@ -5,7 +5,7 @@ import ReservationForm from '../components/ReservationForm';
 import WhySection from '../components/WhySection';
 import MenuPreview from '../components/MenuPreview';
 import GalleryPreview from '../components/GalleryPreview';
-import LocationSection from '../components/LocationSection';
+
 
 const Home: React.FC = () => {
   useEffect(() => {
@@ -47,9 +47,7 @@ const Home: React.FC = () => {
       {/* 6. Gallery Preview Section */}
       <GalleryPreview />
 
-      {/* 7. Location & Hours Section */}
-      <LocationSection />
-    </>
+  </>
   );
 };
 
