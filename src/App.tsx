@@ -8,6 +8,7 @@ import MenuPage from './pages/Menu';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import ThankYou from './pages/ThankYou';
+import Gallery from './components/Gallery';
 import { usePageTracking } from './hooks/usePageTracking';
 
 const AppContent: React.FC = () => {
@@ -33,6 +34,7 @@ const AppContent: React.FC = () => {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/thank-you" element={<ThankYou />} />
+            <Route path="/gallery" element={<Gallery />} />
           </Routes>
         </main>
 

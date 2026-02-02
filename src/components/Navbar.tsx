@@ -67,6 +67,10 @@ const Navbar: React.FC = () => {
           >
             Contact
           </Link>
+          <Link to="/gallery"aria-current={isActive('/gallery') ? 'page' : undefined}
+  className={`text-sm uppercase tracking-widest font-bold transition-colors ${
+    isActive('/gallery') ? 'text-secondary' : 'text-white/80 hover:text-white'
+  }`}role="listitem">Gallery</Link>
         </div>
       </div>
     </nav>
