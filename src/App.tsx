@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import WhatsAppButton from './components/WhatsAppButton';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import StructuredData from './components/StructuredData';
@@ -37,7 +38,7 @@ const AppContent: React.FC = () => {
             <Route path="/gallery" element={<Gallery />} />
           </Routes>
         </main>
-
+         <WhatsAppButton/>
         <Footer />
       </div>
     </>
