@@ -1,23 +1,24 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Local Business Website Starter 🚀
 
-# Run and deploy your AI Studio app
+## Features
+- Conversion-focused landing page
+- WhatsApp lead tracking
+- Reservation form tracking
+- Google Analytics 4 ready
+- No backend required
+- Fully reusable
 
-This contains everything you need to run your app locally.
+## Setup
+1. Clone repo
+2. Update `/constants`
+3. Add GA ID
+4. Deploy
 
-View your app in AI Studio: https://ai.studio/apps/drive/1uSQP_kSwNum7AbbtLkwnxjCGGSZh9fcu
+## Ideal for
+- Restaurants
+- Dental clinics
+- Salons
+- Clinics
+- Local services
 
-## Run Locally
 
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set VITE_GEMINI_API_KEY as an environment variable.
-For local development, create a .env file:
-VITE_GEMINI_API_KEY=your_api_key
-For production, configure the variable in Netlify.
-3. Run the app:
-   `npm run dev`

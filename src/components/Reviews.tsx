@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { REVIEWS, REVIEW_COUNT, GOOGLE_RATING,GOOGLE_REVIEW_URL } from '../constants';
+import {BUSINESS } from '../constants/business';
 
 const Reviews: React.FC = () => {
   return (
@@ -14,13 +14,13 @@ const Reviews: React.FC = () => {
         </h2>
 
         <p className="text-primary/70 text-lg mb-8">
-          ⭐ {GOOGLE_RATING} rating on Google  
+          ⭐ {BUSINESS.google.rating} rating on Google  
           <br />
-          Based on {REVIEW_COUNT}+ verified reviews
+          Based on {BUSINESS.google.reviewCount}+ verified reviews
         </p>
 
         <a
-          href={GOOGLE_REVIEW_URL}
+          href={BUSINESS.google. reviewsUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-primary text-white font-semibold hover:bg-secondary transition"

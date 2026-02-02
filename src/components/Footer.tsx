@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { RESTAURANT_NAME, ADDRESS, PHONE } from '../constants';
+import { RESTAURANT_NAME, ADDRESS, PHONE } from '../constants/menu';
 
 const Footer: React.FC = () => {
   return (

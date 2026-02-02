@@ -1,8 +1,27 @@
 
 import React from 'react';
-import { RESTAURANT_NAME, GOOGLE_RATING, REVIEW_COUNT, WHATSAPP_LINK } from '../constants';
+import { Link } from 'react-router-dom';
+import { RESTAURANT_NAME, GOOGLE_RATING, REVIEW_COUNT } from '../constants/menu';
 import WhatsAppButton from "./WhatsAppButton";
+import analytics from '../services/analytics';
+
+const handleReserveClick = () => {
+  analytics.trackReserveButtonClick('Hero Component');
+};
+
 const Hero: React.FC = () => {
+  const handleReserveClickWithScroll = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    handleReserveClick();
+    // If we're on the home page, scroll to reservation section
+    if (window.location.pathname === '/') {
+      e.preventDefault();
+      const reservationSection = document.getElementById('reservation-section');
+      if (reservationSection) {
+        reservationSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
   return (
     <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
       {/* Background Image: Aerial Forest Resort (Matches user-provided image) */}
@@ -30,18 +49,19 @@ const Hero: React.FC = () => {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a 
-            href="#reservation-section" 
+          <Link 
+            to="/"
+            onClick={handleReserveClickWithScroll}
             className="w-full sm:w-auto bg-white/10 backdrop-blur-md text-white border border-white/20 px-10 py-4 rounded-full text-lg font-medium hover:bg-white/20 transition-all"
           >
             Reserve a Table
-          </a>
-          <a 
-            href="#menu"
+          </Link>
+          <Link 
+            to="/menu"
             className="w-full sm:w-auto bg-secondary text-primary px-10 py-4 rounded-full text-lg font-bold transition-all hover:scale-105 active:scale-95 shadow-xl shadow-secondary/20"
           >
             View Menu
-          </a>
+          </Link>
         </div>
       </div>
 

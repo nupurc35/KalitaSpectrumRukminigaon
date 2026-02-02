@@ -1,7 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import { MENU_ITEMS, WHATSAPP_LINK } from '../constants';
-
+import { Link } from 'react-router-dom';
+import { MENU_ITEMS, WHATSAPP_LINK } from '../constants/menu';
+const handleMenuClick = (item) => {
+  if (item.featured) {
+    window.gtag?.('event', 'menu_featured_click', {
+      event_category: 'menu',
+      event_label: item.name
+    });
+  }
+};
 const Menu: React.FC = () => {
   const categories = [
     'Appetizers',
@@ -86,8 +94,8 @@ const Menu: React.FC = () => {
      {   <div className="grid md:grid-cols-2 gap-8 min-h-[400px]">
           
           {filteredItems.map(item => (
-            <div key={item.id} className="relative group bg-white p-5 rounded-[2rem] shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col sm:flex-row gap-6 border border-primary/5">
-                <div className="absolute top-8 left-8 z-10 flex gap-2">
+            <div onClick={()=>handleMenuClick(item)} key={item.id} className="relative group bg-white p-5 rounded-[2rem] shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col sm:flex-row gap-6 border border-primary/5">
+                <div  className="absolute top-8 left-8 z-10 flex gap-2">
                {item.featured && (<span className="text-[9px] uppercase font-semibold tracking-[0.18em]
       px-3 py-1 rounded-full bg-secondary text-white">Chef’s Special </span>
   )}
@@ -140,12 +148,21 @@ const Menu: React.FC = () => {
         
         
         <div className="mt-16 text-center">
-            <a 
-              href="#reservation-section"
+            <Link 
+              to="/"
+              onClick={(e) => {
+                if (window.location.pathname === '/') {
+                  e.preventDefault();
+                  const reservationSection = document.getElementById('reservation-section');
+                  if (reservationSection) {
+                    reservationSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }
+              }}
               className="inline-block bg-primary text-white px-12 py-4 rounded-full font-bold uppercase tracking-widest transition-all duration-300 hover:bg-secondary hover:shadow-xl hover:-translate-y-1"
             >
               Reserve a Table
-            </a>
+            </Link>
         </div>
       </div>
     </section>
