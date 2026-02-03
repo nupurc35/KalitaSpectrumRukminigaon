@@ -143,7 +143,32 @@ const resetChat = () => {
             border: "1px solid rgba(255,255,255,0.08)"}}
         >
          
-    {/* ⬅ START OVER BUTTON — PUT IT HERE */}
+    {/* Chat Header */}
+<div
+  style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8
+  }}
+>
+  <strong style={{ fontSize: 14 }}>Kalita Concierge</strong>
+
+  <button
+    onClick={() => setOpen(false)}
+    style={{
+      background: "transparent",
+      border: "none",
+      color: "#94a3b8",
+      cursor: "pointer",
+      fontSize: 16
+    }}
+    aria-label="Close chat"
+  >
+    ✕
+  </button>
+</div>
+{/* ⬅ START OVER BUTTON — PUT IT HERE */}
            {messages.length > 1 && (
              <button onClick={resetChat} style={{
              background: "transparent",
