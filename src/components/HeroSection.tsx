@@ -1,6 +1,5 @@
 import React from 'react';
 import { RESTAURANT_NAME } from '../constants/menu';
-import WhatsAppButton from './WhatsAppButton';
 import analytics from '../services/analytics';
 
 const HeroSection: React.FC = () => {
@@ -53,7 +52,7 @@ const HeroSection: React.FC = () => {
         </svg>
       </div>
       
-      <WhatsAppButton />
+
     </header>
   );
 };

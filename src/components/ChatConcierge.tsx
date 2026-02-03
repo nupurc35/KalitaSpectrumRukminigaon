@@ -1,103 +1,238 @@
+import { useState ,react} from "react";
 
-import React, { useState, useRef, useEffect } from 'react';
-import { getTasteRecommendation } from '../services/geminiService';
-import { RESTAURANT_NAME } from '../constants';
-
-const ChatConcierge: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<{role: 'user' | 'bot', text: string}[]>([
-    {role: 'bot', text: `Welcome to ${RESTAURANT_NAME}! I'm your Taste Concierge. What are you craving today?`}
-  ]);
-  const [loading, setLoading] = useState(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    if (isOpen) scrollToBottom();
-  }, [messages, isOpen]);
-
-  const handleSend = async () => {
-    if (!input.trim() || loading) return;
-
-    const userMsg = input;
-    setMessages(prev => [...prev, {role: 'user', text: userMsg}]);
-    setInput('');
-    setLoading(true);
-
-    const botReply = await getTasteRecommendation(userMsg);
-    setMessages(prev => [...prev, {role: 'bot', text: botReply}]);
-    setLoading(false);
-  };
-
-  return (
-    <div className="fixed bottom-6 right-6 z-[60]">
-      {isOpen ? (
-        <div className="bg-primary border border-white/10 w-[350px] sm:w-[400px] h-[500px] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-10 duration-300">
-          <div className="bg-secondary p-4 flex justify-between items-center">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-primary text-xs font-bold">KS</div>
-              <span className="font-bold text-primary">Taste Concierge</span>
-            </div>
-            <button onClick={() => setIsOpen(false)} className="text-primary hover:rotate-90 transition-transform">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm ${
-                  m.role === 'user' ? 'bg-secondary text-primary font-medium' : 'bg-white/5 border border-white/10 text-white'
-                }`}>
-                  {m.text}
-                </div>
-              </div>
-            ))}
-            {loading && (
-              <div className="flex justify-start">
-                <div className="bg-white/5 px-4 py-2.5 rounded-2xl flex space-x-1">
-                  <div className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce"></div>
-                  <div className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                  <div className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce [animation-delay:0.4s]"></div>
-                </div>
-              </div>
-            )}
-            <div ref={chatEndRef} />
-          </div>
-
-          <div className="p-4 border-t border-white/10">
-            <div className="flex items-center space-x-2">
-              <input 
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="What should I eat today?" 
-                className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-secondary"
-              />
-              <button 
-                onClick={handleSend}
-                className="bg-secondary text-primary p-2 rounded-full hover:bg-white transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <button 
-          onClick={() => setIsOpen(true)}
-          className="bg-secondary text-primary p-4 rounded-full shadow-2xl hover:scale-110 transition-all group flex items-center space-x-3"
-        >
-          <span className="max-w-0 overflow-hidden group-hover:max-w-[150px] transition-all duration-500 whitespace-nowrap text-sm font-bold uppercase tracking-wider">Taste Concierge</span>
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
-        </button>
-      )}
-    </div>
-  );
+type Message = {
+  from: "bot" | "user";
+  text: string;
 };
 
-export default ChatConcierge;
+export default function ChatConcierge() {
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([
+    { from: "bot", text: "Hi 👋 How can I help you today?" }
+  ]);
+  const [expecting, setExpecting] = useState<null | "phone">(null);
+  const [showReservationForm, setShowReservationForm] = useState(false);
+
+  const WHATSAPP_NUMBER = "918453708792"; // 🔁 change if needed
+
+  const pushUser = (text: string) =>
+    setMessages((m) => [...m, { from: "user", text }]);
+
+  const pushBot = (text: string) =>
+    setMessages((m) => [...m, { from: "bot", text }]);
+
+  const openWhatsApp = (message: string) => {
+    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+      message
+    )}`;
+    window.open(url, "_blank");
+  };
+
+  const handleOption = (option: "call" | "reserve" | "availability" | "other") => {
+    if (option === "call") {
+      pushUser("📞 Call me back");
+      pushBot("Sure 😊 Please share your phone number.");
+      setExpecting("phone");
+    }
+
+    if (option === "reserve") {
+      pushUser("🍽 Reserve a table");
+      pushBot("Great! Please fill in your reservation details below 👇");
+      setShowReservationForm(true);
+    }
+
+    if (option === "availability") {
+      pushUser("📅 Today’s availability");
+      pushBot(
+        "We’re open today 😊 Please share your phone number and preferred time, and our team will confirm availability."
+      );
+      setExpecting("phone");
+    }
+
+    if (option === "other") {
+      pushUser("❓ Ask something else");
+      pushBot(
+        "I can help with call-backs or table reservations. Please choose one of the options above 😊"
+      );
+    }
+  };
+
+  const handlePhoneSubmit = (phone: string) => {
+    pushUser(phone);
+    pushBot("Thank you! Our team will contact you shortly 🙏");
+
+    openWhatsApp(
+      `New Call-back Request\nPhone: ${phone}\nSource: Website Concierge`
+    );
+
+    setExpecting(null);
+  };
+
+  const handleReservationSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const data = new FormData(form);
+
+    const message = `New Table Reservation Request
+Name: ${data.get("name")}
+Phone: ${data.get("phone")}
+Date: ${data.get("date")}
+Time: ${data.get("time")}
+Guests: ${data.get("guests")}
+Source: Website Concierge`;
+
+    pushBot("Thank you! We’ve received your request 🙏");
+    openWhatsApp(message);
+
+    setShowReservationForm(false);
+  };
+
+
+const resetChat = () => {
+  setMessages([
+    { from: "bot", text: "Hi 👋 How can I help you today?" }
+  ]);
+  setExpecting(null);
+  setShowReservationForm(false);
+};
+
+
+
+  return (
+    <>
+      {/* Floating Button */}
+      <button
+        onClick={() => setOpen((o) => !o)}
+        
+          style={{
+          position: "fixed",
+          bottom: 20,
+          right: 20,
+          width: 56,
+          height: 56,
+          borderRadius: "50%",
+          backgroundColor: "#25D366",
+          color: "#ffffff",
+          fontSize: 24,
+          border: "none",
+          cursor: "pointer",
+          boxShadow: "0 8px 20px rgba(0,0,0,0.35)",
+          zIndex: 1000}}
+         aria-label="Chat with Kalita Concierge"
+      >
+        💬
+      </button>
+
+      {/* Chat Window */}
+      {open && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 90,
+            right: 20,
+            width: 320,
+            maxHeight: 420,
+            background: "#0b1220",
+            borderRadius: 14,
+            padding: 12,
+            color: "#e5e7eb",
+            zIndex: 1000,
+            display: "flex",
+            flexDirection: "column",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.45)",
+            border: "1px solid rgba(255,255,255,0.08)"}}
+        >
+         
+    {/* ⬅ START OVER BUTTON — PUT IT HERE */}
+           {messages.length > 1 && (
+             <button onClick={resetChat} style={{
+             background: "transparent",
+             color: "#93c5fd",
+             border: "none",
+             cursor: "pointer",
+             fontSize: 12,
+             marginBottom: 6,
+             alignSelf: "flex-start"}} >⬅ Start over</button>)}
+         
+         {/* Messages */}
+          <div style={{ flex: 1, overflowY: "auto", marginBottom: 8 }}>
+            {messages.map((m, i) => (
+              <div
+                key={i}
+                style={{
+                flex: 1,
+                overflowY: "auto",
+                marginBottom: 8,
+                paddingRight: 4
+                }}>
+                <span
+                  style={{
+                    display: "inline-block",
+                    padding: "6px 10px",
+                    borderRadius: 8,
+                    background:
+                      m.from === "user" ? "#1e293b" : "#020617"
+                  }}
+                >
+                  {m.text}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Quick Options (only at start) */}
+          {messages.length === 1 && (
+            <div style={{ display: "grid", gap: 8 }}>
+              <button onClick={() => handleOption("call")}>📞 Call me back</button>
+              <button onClick={() => handleOption("reserve")}>
+                🍽 Reserve a table
+              </button>
+              <button onClick={() => handleOption("availability")}>
+                📅 Today’s availability
+              </button>
+              <button onClick={() => handleOption("other")}>❓ Help</button>
+            </div>
+          )}
+
+          {/* Phone Input */}
+          {expecting === "phone" && (
+            <input
+              autoFocus
+              placeholder="Enter your phone number"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handlePhoneSubmit(
+                    (e.target as HTMLInputElement).value
+                  );
+                }
+              }}
+              style={{
+                marginTop: 8,
+                padding: 8,
+                borderRadius: 8,
+                border: "1px solid #cbd5f5",
+                backgroundColor: "#ffffff",
+                color: "#000000",
+                fontSize: 13}}
+              />
+          )}
+
+          {/* Reservation Form */}
+          {showReservationForm && (
+            <form
+              onSubmit={handleReservationSubmit}
+              style={{ padding: 8,borderRadius: 8,border: "1px solid #cbd5f5",backgroundColor: "#ffffff",
+                     color: "#000000",fontSize: 13 }}>
+              <input name="name" placeholder="Your name" required />
+              <input name="phone" placeholder="Phone number" required />
+              <input type="date" name="date" required />
+              <input type="time" name="time" required />
+              <input name="guests" placeholder="Number of guests" required />
+              <button type="submit">Submit Reservation</button>
+            </form>
+          )}
+        </div>
+      )}
+    </>
+  );
+}

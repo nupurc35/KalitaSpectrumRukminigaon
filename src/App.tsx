@@ -1,6 +1,5 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import WhatsAppButton from './components/WhatsAppButton';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import StructuredData from './components/StructuredData';
@@ -11,6 +10,7 @@ import Contact from './pages/Contact';
 import ThankYou from './pages/ThankYou';
 import Gallery from './components/Gallery';
 import { usePageTracking } from './hooks/usePageTracking';
+import ChatConcierge from "./components/ChatConcierge";
 
 const AppContent: React.FC = () => {
   // Track page views on route changes
@@ -38,8 +38,9 @@ const AppContent: React.FC = () => {
             <Route path="/gallery" element={<Gallery />} />
           </Routes>
         </main>
-         <WhatsAppButton/>
+         
         <Footer />
+        <ChatConcierge />
       </div>
     </>
   );
