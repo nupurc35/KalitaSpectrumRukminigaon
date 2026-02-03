@@ -1,4 +1,4 @@
-import { useState ,react} from "react";
+import { useState} from "react";
 
 type Message = {
   from: "bot" | "user";
@@ -12,23 +12,40 @@ export default function ChatConcierge() {
   ]);
   const [expecting, setExpecting] = useState<null | "phone">(null);
   const [showReservationForm, setShowReservationForm] = useState(false);
-
   const WHATSAPP_NUMBER = "918453708792"; // 🔁 change if needed
 
   const pushUser = (text: string) =>
-    setMessages((m) => [...m, { from: "user", text }]);
+    setMessages((prev) => [...prev, { from: "user", text }]);
 
   const pushBot = (text: string) =>
-    setMessages((m) => [...m, { from: "bot", text }]);
-
-  const openWhatsApp = (message: string) => {
+    setMessages((prev) => [...prev, { from: "bot", text }]);
+  
+ const openWhatsApp = (message: string) => {
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
       message
     )}`;
     window.open(url, "_blank");
   };
 
-  const handleOption = (option: "call" | "reserve" | "availability" | "other") => {
+  const handlePhoneSubmit = (rawPhone: string) => {
+    const phone = rawPhone.replace(/\D/g, "");
+
+    if (phone.length < 10) {
+      pushBot("Please enter a valid 10-digit phone number 😊");
+      return;
+    }
+
+    pushUser(phone);
+    pushBot("Thank you! Our team will contact you shortly 🙏");
+
+    openWhatsApp(
+      `New Call-back Request\nPhone: ${phone}\nSource: Website Concierge`
+    );
+
+    setExpecting(null);
+  };
+  
+const handleOption = (option: "call" | "reserve" | "availability" | "other") => {
     if (option === "call") {
       pushUser("📞 Call me back");
       pushBot("Sure 😊 Please share your phone number.");
@@ -56,19 +73,7 @@ export default function ChatConcierge() {
       );
     }
   };
-
-  const handlePhoneSubmit = (phone: string) => {
-    pushUser(phone);
-    pushBot("Thank you! Our team will contact you shortly 🙏");
-
-    openWhatsApp(
-      `New Call-back Request\nPhone: ${phone}\nSource: Website Concierge`
-    );
-
-    setExpecting(null);
-  };
-
-  const handleReservationSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+const handleReservationSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const data = new FormData(form);
@@ -87,7 +92,6 @@ Source: Website Concierge`;
     setShowReservationForm(false);
   };
 
-
 const resetChat = () => {
   setMessages([
     { from: "bot", text: "Hi 👋 How can I help you today?" }
@@ -95,10 +99,7 @@ const resetChat = () => {
   setExpecting(null);
   setShowReservationForm(false);
 };
-
-
-
-  return (
+return (
     <>
       {/* Floating Button */}
       <button
