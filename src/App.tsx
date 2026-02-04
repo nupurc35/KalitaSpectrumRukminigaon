@@ -12,6 +12,8 @@ import Gallery from './components/Gallery';
 import Dashboard from './pages/admin/dashboard';
 import { usePageTracking } from './hooks/usePageTracking';
 import ChatConcierge from "./components/ChatConcierge";
+import Login from "./pages/admin/Login";
+import ProtectedRoute from "./components/protectedRoute";
 
 const AppContent: React.FC = () => {
   // Track page views on route changes
@@ -38,6 +40,8 @@ const AppContent: React.FC = () => {
             <Route path="/thank-you" element={<ThankYou />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/admin/dashboard" element={<Dashboard />} />
+            <Route path="/admin/login" element={<Login />} />
+            <Route path="/admin"element={<ProtectedRoute><Dashboard /></ProtectedRoute>}/>
           </Routes>
         </main>
          

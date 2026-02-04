@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { fetchLeads,fetchReservations} from "../../services/adminService";
-
+import AdminHeader from "./adminNavbar";
+import { supabase } from "@/lib/superbase";
 const Dashboard: React.FC = () => {
   const [leads, setLeads] = useState<any[]>([]);
   const [reservations, setReservations] = useState<any[]>([]);
@@ -14,7 +15,8 @@ const Dashboard: React.FC = () => {
     const loadData = async () => {
       const { data: leadsData } = await fetchLeads();
      const { data: reservationData } = await fetchReservations();
-
+     const { data: sessionData } = await supabase.auth.getSession(); // temporary
+     console.log("SESSION:", sessionData.session); //temporary
       setLeads(leadsData || []);
       setReservations(reservationData || []);
     };
@@ -23,6 +25,10 @@ const Dashboard: React.FC = () => {
   }, []);
 
   return (
+          <>   <div className="relative z-[9999]">
+                   <AdminHeader />
+              </div> 
+     
     <div className="p-8 min-h-screen bg-neutral-950 text-white">
       <h1 className="text-3xl font-serif mb-6">Admin Dashboard</h1>
 
@@ -107,6 +113,8 @@ const Dashboard: React.FC = () => {
         </table>
       )}
     </div>
+     </>
+  
   );
 };
 
