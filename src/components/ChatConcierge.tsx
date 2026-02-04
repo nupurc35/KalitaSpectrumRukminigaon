@@ -1,9 +1,14 @@
-import { useState} from "react";
+import {useState,react} from "react";
+import { supabase } from "../lib/superbase";
 
 type Message = {
   from: "bot" | "user";
   text: string;
 };
+
+
+
+
 
 export default function ChatConcierge() {
   const [open, setOpen] = useState(false);
@@ -27,14 +32,29 @@ export default function ChatConcierge() {
     window.open(url, "_blank");
   };
 
-  const handlePhoneSubmit = (rawPhone: string) => {
+  const handlePhoneSubmit = async(rawPhone: string) => {
     const phone = rawPhone.replace(/\D/g, "");
 
     if (phone.length < 10) {
       pushBot("Please enter a valid 10-digit phone number 😊");
       return;
     }
+    // 🔹 INSERT INTO SUPABASE
+    const { error } = await supabase.from("leads").insert({
+    restaurant_id: import.meta.env.VITE_RESTAURANT_ID,
+    phone: phone,
+    intent: "callback",
+    source: "chat_concierge"
+  });
 
+  if (error) {
+    console.error("Supabase insert failed:", error);
+    pushBot("Something went wrong. Please try again 🙏");
+    return;
+  }
+     
+
+   // 🔹 UI + WhatsApp
     pushUser(phone);
     pushBot("Thank you! Our team will contact you shortly 🙏");
 

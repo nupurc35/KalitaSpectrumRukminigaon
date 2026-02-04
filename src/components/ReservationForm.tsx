@@ -1,10 +1,13 @@
+console.log("Supabase client:", supabase);
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ChangeEvent } from 'react';
 import { saveReservation } from '../services/reservationService';
 import { validateIndianPhoneNumber } from '../utils/phoneValidation';
 import analytics from '../services/analytics';
-
+import { supabase } from "../lib/superbase";
+import { time } from 'console';
 export default function ReservationForm() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -126,90 +129,69 @@ export default function ReservationForm() {
 
     setIsSubmitting(true);
 
-    try {
-      // Validate and clean phone number
-      const phoneValidation = validateIndianPhoneNumber(formData.phone);
-      const cleanedPhone = phoneValidation.cleaned || formData.phone;
+  const handleSubmit = async () => {
+  if (!validateForm()) return;
 
-      // Prepare reservation data
-      const reservationData = {
-        name: formData.name.trim(),
-        phone: cleanedPhone,
-        date: formData.date,
-        time: formData.time,
-        guests: formData.guests,
-        occasion: formData.occasion.trim() || undefined,
-        submittedAt: new Date().toISOString(),
-      };
+  setIsSubmitting(true); 
+  }
+  try {
+    // 1. Clean / validate phone
+    const phoneValidation = validateIndianPhoneNumber(formData.phone);
+    const cleanedPhone = phoneValidation.cleaned || formData.phone;
 
-      // Save reservation data (non-blocking)
-      await saveReservation(reservationData);
+    // 2. Prepare reservation payload
+    const reservationData = {
+      restaurant_id: "63bfceb5-1fad-4d42-b0c0-80a29c3e4be2",
+      name: formData.name.trim(),
+      phone: cleanedPhone,
+      date: formData.date,
+      time: formData.time,
+      guests: Number(formData.guests),
+      occasion: formData.occasion?.trim() || null,
+      created_at: new Date().toISOString(),
+    };
 
-      // Track reservation submission
-      analytics.trackReservationSubmit({
-        guests: reservationData.guests,
-        date: reservationData.date,
-        time: reservationData.time,
-      });
+    // 3. Save to Supabase
+    const { error } = await supabase
+      .from("reservations")
+      .insert([reservationData]);
 
-      // Format date for display
-      const dateObj = new Date(formData.date);
-      const formattedDate = dateObj.toLocaleDateString('en-IN', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-
-      // Create WhatsApp message (unchanged flow)
-      const message = `*Kalita Spectrum - Table Reservation*
-
-*Name:* ${formData.name}
-*Phone:* ${cleanedPhone}
-*Date:* ${formattedDate}
-*Time:* ${formatTimeForDisplay(formData.time)}
-*Number of Guests:* ${formData.guests}
-*Occasion:* ${formData.occasion || 'Not specified'}
-
-I would like to reserve a table. Please confirm availability.`;
-
-      const encodedMessage = encodeURIComponent(message);
-      const whatsappNumber = '918453708792';
-      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-      
-      // Open WhatsApp (unchanged flow)
-      window.open(whatsappUrl, '_blank');
-      
-      // Navigate to thank you page after a short delay
-      setTimeout(() => {
-        setIsSubmitting(false);
-        navigate('/thank-you');
-      }, 1000);
-    } catch (error) {
-      console.error('Error submitting reservation:', error);
-      setIsSubmitting(false);
-      // Still open WhatsApp even if save fails
-      const message = `*Kalita Spectrum - Table Reservation*
-
-*Name:* ${formData.name}
-*Phone:* ${formData.phone}
-*Date:* ${formData.date}
-*Time:* ${formatTimeForDisplay(formData.time)}
-*Number of Guests:* ${formData.guests}
-*Occasion:* ${formData.occasion || 'Not specified'}
-
-I would like to reserve a table. Please confirm availability.`;
-
-      const encodedMessage = encodeURIComponent(message);
-      const whatsappNumber = '918453708792';
-      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-      window.open(whatsappUrl, '_blank');
-      
-      setTimeout(() => {
-        navigate('/thank-you');
-      }, 1000);
+    if (error) {
+      throw error;
     }
-  };
+
+    // 4. Open WhatsApp (success path)
+    const whatsappMessage = encodeURIComponent(
+      `New Reservation\n
+Name: ${reservationData.name}
+Phone: ${reservationData.phone}
+Date: ${reservationData.date}
+Time: ${reservationData.time}
+Guests: ${reservationData.guests}`
+    );
+
+    window.open(
+      `https://wa.me/918453708792?text=${whatsappMessage}`,
+      "_blank"
+    );
+
+    // 5. Navigate to thank-you page
+    setTimeout(() => {
+      navigate("/thank-you");
+    }, 1000);
+
+  } catch (error: any) {
+  console.error("Reservation error:", {
+    message: error?.message,
+    details: error?.details,
+    hint: error?.hint,
+    code: error?.code,
+  });
+
+  alert(error?.message || "Reservation failed");
+  setIsSubmitting(false);
+}
+};
 
   return (
     <section id="reservation-section" className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6">
@@ -244,7 +226,7 @@ I would like to reserve a table. Please confirm availability.`;
                   aria-required="true"
                   aria-invalid={errors.name ? 'true' : 'false'}
                   aria-describedby={errors.name ? 'name-error' : undefined}
-                  className={`h-12 w-full px-4 rounded-lg border ${
+                  className={`h-12 w-full px-4 rounded-lg border text-gray-900 bg-white ${
                     errors.name ? 'border-red-500' : 'border-gray-300'
                   } focus:border-green-500 focus:ring-2 focus:ring-green-500 outline-none transition`}
                 />
@@ -267,7 +249,7 @@ I would like to reserve a table. Please confirm availability.`;
                   aria-required="true"
                   aria-invalid={errors.phone ? 'true' : 'false'}
                   aria-describedby={errors.phone ? 'phone-error' : undefined}
-                  className={`h-12 w-full px-4 rounded-lg border ${
+                  className={`h-12 w-full px-4 rounded-lg border text-gray-900 bg-white${
                     errors.phone ? 'border-red-500' : 'border-gray-300'
                   } focus:border-green-500 focus:ring-2 focus:ring-green-500 outline-none transition`}
                 />
@@ -293,7 +275,7 @@ I would like to reserve a table. Please confirm availability.`;
                   aria-required="true"
                   aria-invalid={errors.date ? 'true' : 'false'}
                   aria-describedby={errors.date ? 'date-error' : undefined}
-                  className={`h-12 w-full px-4 rounded-lg border ${
+                  className={`h-12 w-full px-4 rounded-lg border text-gray-900 bg-white${
                     errors.date ? 'border-red-500' : 'border-gray-300'
                   } focus:border-green-500 focus:ring-2 focus:ring-green-500 outline-none transition`}
                 />
@@ -314,7 +296,7 @@ I would like to reserve a table. Please confirm availability.`;
                   aria-required="true"
                   aria-invalid={errors.time ? 'true' : 'false'}
                   aria-describedby={errors.time ? 'time-error' : undefined}
-                  className={`h-12 w-full px-4 rounded-lg border ${
+                  className={`h-12 w-full px-4 rounded-lg border text-gray-900 bg-white${
                     errors.time ? 'border-red-500' : 'border-gray-300'
                   } focus:border-green-500 focus:ring-2 focus:ring-green-500 outline-none transition bg-white`}
                 >
@@ -348,7 +330,7 @@ I would like to reserve a table. Please confirm availability.`;
                   aria-required="true"
                   aria-invalid={errors.guests ? 'true' : 'false'}
                   aria-describedby={errors.guests ? 'guests-error' : undefined}
-                  className={`h-12 w-full px-4 rounded-lg border ${
+                  className={`h-12 w-full px-4 rounded-lg border text-gray-900 bg-white${
                     errors.guests ? 'border-red-500' : 'border-gray-300'
                   } focus:border-green-500 focus:ring-2 focus:ring-green-500 outline-none transition`}
                 />
@@ -368,7 +350,7 @@ I would like to reserve a table. Please confirm availability.`;
                   value={formData.occasion}
                   onChange={handleChange}
                   placeholder="Birthday, Anniversary, etc."
-                  className="h-12 w-full px-4 rounded-lg border border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-500 outline-none transition"
+                  className="h-12 w-full px-4 rounded-lg border border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-500 outline-none transition text-gray-900 bg-white"
                 />
               </div>
             </div>

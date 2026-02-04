@@ -13,6 +13,11 @@ Rules:
 - If unsure, gently ask how you can help
 `;
 
+if (!API_KEY) {
+  throw new Error("Gemini API key missing");
+}
+
+
 export async function getConciergeReply(userMessage: string): Promise<string> {
   // Simple intent detection
   const lower = userMessage.toLowerCase();
