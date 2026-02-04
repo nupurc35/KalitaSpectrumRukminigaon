@@ -1,47 +1,107 @@
-import React from 'react';
-import { MAP_LINK, MAP_EMBED_URL, ADDRESS, PHONE } from '../constants/menu';
+import React, { useState } from "react";
+import { MAP_LINK, MAP_EMBED_URL, ADDRESS, PHONE } from "../constants/menu";
+import { createLead } from "../services/leadService";
+import { KALITA_RESTAURANT_ID } from "../constants/restaurent";
 
 const Contact: React.FC = () => {
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!phone.trim()) {
+      alert("Please enter your phone number");
+      return;
+    }
+
+    setLoading(true);
+
+    const { error } = await createLead({
+      restaurant_id: KALITA_RESTAURANT_ID,
+      name: name.trim() || undefined,
+      phone: phone.trim(),
+      message: message.trim() || undefined,
+      intent: "contact",
+      source: "website",
+    });
+
+    setLoading(false);
+
+    if (error) {
+      alert("Something went wrong. Please try again.");
+      return;
+    }
+
+    setName("");
+    setPhone("");
+    setMessage("");
+    setSubmitted(true);
+    //alert("We’ll call you back shortly.");
+  };
+
   return (
-    <section className="py-24 px-6 bg-accent scroll-mt-24 min-h-screen flex items-center">
+    <section className="py-24 px-6 bg-accent min-h-screen flex items-center">
       <div className="max-w-7xl mx-auto w-full">
         <div className="bg-primary rounded-[40px] overflow-hidden flex flex-col lg:flex-row shadow-2xl border border-white/5">
-          <div className="p-8 md:p-16 lg:w-2/5 flex flex-col justify-center">
-            <span className="text-secondary uppercase text-[10px] tracking-widest font-bold mb-4">Location & Hours</span>
-            <h3 className="text-4xl md:text-5xl font-serif mb-8 text-white italic">Visit Spectrum</h3>
-            <div className="space-y-8">
-              <div>
-                <p className="text-white/50 uppercase text-[10px] tracking-widest font-bold mb-2">Our Address</p>
-                <p className="text-white text-lg leading-relaxed">{ADDRESS}</p>
+          
+          {/* LEFT: CONTACT INFO */}
+          <div className="p-8 md:p-16 lg:w-2/5">
+            <span className="text-secondary uppercase text-[10px] tracking-widest font-bold mb-4">
+              Contact Us
+            </span>
+
+            <h3 className="text-4xl md:text-5xl font-serif mb-8 text-white italic">
+              Get in Touch
+            </h3>
+
+            <div className="space-y-6">
+              <p className="text-white/70">{ADDRESS}</p>
+
+              <a
+                href={`tel:${PHONE.replace(/\s/g, "")}`}
+                className="text-secondary text-2xl font-serif hover:text-white"
+              >
+                {PHONE}
+              </a>
+
+              {/* CONTACT FORM */}
+              {!submitted ? (
+              <form onSubmit={handleContactSubmit} className="space-y-4 pt-6">
+              <input type="text" placeholder="Your Name (optional)"value={name}onChange={(e) => setName(e.target.value)}
+                     className="w-full px-4 py-3 rounded-lg bg-white/10 text-white placeholder-white/50"/>
+              <input type="tel"placeholder="Phone Number *"value={phone}onChange={(e) => setPhone(e.target.value)}required
+                      className="w-full px-4 py-3 rounded-lg bg-white/10 text-white placeholder-white/50"/>
+              <textarea placeholder="Message (optional)"value={message}onChange={(e) => setMessage(e.target.value)}
+                       className="w-full px-4 py-3 rounded-lg bg-white/10 text-white placeholder-white/50"/>
+              <button type="submit" disabled={loading}className="w-full bg-secondary text-primary py-3 rounded-full font-bold uppercase tracking-widest hover:bg-white transition">
+                      {loading ? "Submitting..." : "Request a Callback"}</button>
+              </form> ) 
+              : (
+              <div className="mt-6 p-6 rounded-2xl bg-secondary/10 border border-secondary/30">
+              <h4 className="text-secondary text-xl font-serif mb-2">
+                      Request Submitted
+               </h4>
+              <p className="text-white/80 leading-relaxed">
+                      Thank you! We’ve received your request and will contact you shortly.
+              </p>
+              </div>)}
               </div>
-              <div>
-                <p className="text-white/50 uppercase text-[10px] tracking-widest font-bold mb-2">Direct Contact</p>
-                <a href={`tel:${PHONE.replace(/\s/g, '')}`} className="text-secondary text-3xl font-serif hover:text-white transition-colors">{PHONE}</a>
-              </div>
-              <div className="pt-4">
-                <a 
-                  href={MAP_LINK} 
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center space-x-3 bg-secondary text-primary px-8 py-4 rounded-full text-sm font-bold uppercase tracking-widest hover:bg-white transition-all shadow-xl shadow-secondary/10"
-                >
-                  <span>Open in Google Maps</span>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                </a>
-              </div>
-            </div>
           </div>
+
+          {/* RIGHT: MAP */}
           <div className="lg:w-3/5 min-h-[500px] relative">
-            <iframe 
+            <iframe
               src={MAP_EMBED_URL}
-              width="100%" 
-              height="100%" 
-              style={{ border: 0, minHeight: '500px' }} 
-              allowFullScreen={true} 
-              loading="lazy" 
+              width="100%"
+              height="100%"
+              style={{ border: 0, minHeight: "500px" }}
+              loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              className="grayscale-[0.1] contrast-[1.1] hover:grayscale-0 transition-all duration-700"
-            ></iframe>
+            />
           </div>
         </div>
       </div>

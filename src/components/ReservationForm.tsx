@@ -1,5 +1,3 @@
-console.log("Supabase client:", supabase);
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ChangeEvent } from 'react';
@@ -7,7 +5,7 @@ import { saveReservation } from '../services/reservationService';
 import { validateIndianPhoneNumber } from '../utils/phoneValidation';
 import analytics from '../services/analytics';
 import { supabase } from "../lib/superbase";
-import { time } from 'console';
+
 export default function ReservationForm() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({

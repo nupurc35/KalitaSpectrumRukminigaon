@@ -1,15 +1,10 @@
-import {useState,react} from "react";
+import {useState} from "react";
 import { supabase } from "../lib/superbase";
 
 type Message = {
   from: "bot" | "user";
   text: string;
 };
-
-
-
-
-
 export default function ChatConcierge() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([

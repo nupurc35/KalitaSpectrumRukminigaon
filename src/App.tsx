@@ -9,6 +9,7 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import ThankYou from './pages/ThankYou';
 import Gallery from './components/Gallery';
+import Dashboard from './pages/admin/dashboard';
 import { usePageTracking } from './hooks/usePageTracking';
 import ChatConcierge from "./components/ChatConcierge";
 
@@ -36,6 +37,7 @@ const AppContent: React.FC = () => {
             <Route path="/contact" element={<Contact />} />
             <Route path="/thank-you" element={<ThankYou />} />
             <Route path="/gallery" element={<Gallery />} />
+            <Route path="/admin/dashboard" element={<Dashboard />} />
           </Routes>
         </main>
          
