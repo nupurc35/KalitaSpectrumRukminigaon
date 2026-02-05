@@ -43,5 +43,8 @@ export interface Reservation {
   phone: string;
   date: string;
   time: string;
+  guests?: number;
+  occasion?: string;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   created_at: string;
 }

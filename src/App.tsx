@@ -11,7 +11,7 @@ import ThankYou from './pages/ThankYou';
 import Gallery from './components/Gallery';
 import Dashboard from './pages/admin/Dashboard';
 import { usePageTracking } from './hooks/usePageTracking';
-import ChatConcierge from "./components/ChatConcierge";
+import ChatConcierge from "./modules/ai/chat/ChatConcierge";
 import Login from "./pages/admin/Login";
 import ProtectedRoute from "./components/protectedRoute";
 

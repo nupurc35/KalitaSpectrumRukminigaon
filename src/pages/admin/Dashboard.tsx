@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { fetchLeads, fetchReservations, updateLeadStatus, deleteLead } from "../../services/adminService";
+import { fetchLeads, fetchReservations, updateLeadStatus, deleteLead, updateReservationStatus } from "../../services/adminService";
 import AdminHeader from "./adminNavbar";
 import { supabase } from "@/lib/superbase";
 import { Lead, Reservation } from "../../types";
@@ -85,6 +85,37 @@ const Dashboard: React.FC = () => {
     } catch (err) {
       console.error("Failed to update status", err);
       alert("Failed to update status. Please try again.");
+    }
+  };
+
+  const handleReservationStatusUpdate = async (
+    id: string,
+    newStatus: "confirmed" | "completed" | "cancelled"
+  ) => {
+    try {
+      // Find current reservation to check current status
+      const currentReservation = reservations.find(r => r.id === id);
+
+      if (!currentReservation) {
+        alert("Reservation not found.");
+        return;
+      }
+
+      // Enforce status transition rules
+      if (currentReservation.status === "completed" || currentReservation.status === "cancelled") {
+        alert("Cannot modify completed or cancelled reservations.");
+        return;
+      }
+
+      const { error } = await updateReservationStatus(id, newStatus);
+      if (error) throw error;
+
+      // Refetch reservations to ensure data consistency
+      const { data: reservationData } = await fetchReservations();
+      setReservations(reservationData || []);
+    } catch (err) {
+      console.error("Failed to update reservation status", err);
+      alert("Failed to update reservation status. Please try again.");
     }
   };
 
@@ -217,6 +248,9 @@ const Dashboard: React.FC = () => {
                     <th className="py-4 px-6 text-xs font-semibold uppercase tracking-widest text-white/40">Phone</th>
                     <th className="py-4 px-6 text-xs font-semibold uppercase tracking-widest text-white/40">Date</th>
                     <th className="py-4 px-6 text-xs font-semibold uppercase tracking-widest text-white/40">Time</th>
+                    <th className="py-4 px-6 text-xs font-semibold uppercase tracking-widest text-white/40">Guests</th>
+                    <th className="py-4 px-6 text-xs font-semibold uppercase tracking-widest text-white/40">Status</th>
+                    <th className="py-4 px-6 text-xs font-semibold uppercase tracking-widest text-white/40 text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -226,6 +260,32 @@ const Dashboard: React.FC = () => {
                       <td className="py-4 px-6 font-mono text-sm text-white/80">{r.phone}</td>
                       <td className="py-4 px-6 text-sm text-white/80">{r.date}</td>
                       <td className="py-4 px-6 text-sm text-white/80">{r.time}</td>
+                      <td className="py-4 px-6 text-sm text-white/80">{r.guests || '-'}</td>
+                      <td className="py-4 px-6">
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${r.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                            r.status === 'completed' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                              'bg-red-500/10 text-red-400 border-red-500/20'
+                          }`}>
+                          {r.status}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6 text-right">
+                        {r.status === 'confirmed' ? (
+                          <select
+                            value={r.status}
+                            onChange={(e) => handleReservationStatusUpdate(r.id, e.target.value as any)}
+                            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-gray-900 border border-gray-300 hover:bg-gray-50 transition-colors cursor-pointer"
+                          >
+                            <option value="confirmed">Confirmed</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                        ) : (
+                          <span className="text-xs font-medium text-white/30 italic">
+                            {r.status === 'completed' ? 'Completed' : 'Cancelled'}
+                          </span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

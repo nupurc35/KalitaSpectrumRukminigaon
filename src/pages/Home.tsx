@@ -5,7 +5,6 @@ import ReservationForm from '../components/ReservationForm';
 import WhySection from '../components/WhySection';
 import MenuPreview from '../components/MenuPreview';
 import GalleryPreview from '../components/GalleryPreview';
-import ChatConcierge from "../components/ChatConcierge";
 
 
 const Home: React.FC = () => {
@@ -28,7 +27,7 @@ const Home: React.FC = () => {
     <>
       {/* 1. Hero Section */}
       <HeroSection />
-      
+
       {/* 2. Trust Section */}
       <TrustSection />
 
@@ -48,10 +47,7 @@ const Home: React.FC = () => {
       {/* 6. Gallery Preview Section */}
       <GalleryPreview />
 
-        {/* Concierge Lead Capture */}
-      <ChatConcierge />
-
-  </>
+    </>
   );
 };
 

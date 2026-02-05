@@ -45,6 +45,17 @@ export const deleteLead = async (id: string) => {
     .select();
 };
 
+export const updateReservationStatus = async (
+  id: string,
+  status: "confirmed" | "completed" | "cancelled"
+) => {
+  return supabase
+    .from("reservations")
+    .update({ status })
+    .eq("id", id)
+    .select();
+};
+
 /*export const fetchLeads = async () => {
   console.log("fetchLeads called");
 
