@@ -15,3 +15,26 @@ export const createLead = async (lead: {
     },
   ]);
 };
+
+export const getLeads = async (
+  page: number = 0,
+  pageSize: number = 20
+) => {
+  const from = page * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data, error } = await supabase
+    .from("leads")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  if (error) {
+    console.error("Lead fetch error:", error);
+    throw error;
+  }
+
+  return data ?? [];
+};
+
+

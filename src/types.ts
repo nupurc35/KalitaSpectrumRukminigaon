@@ -27,3 +27,21 @@ export interface BookingData {
   time: string;
   guests: number;
 }
+
+export interface Lead {
+  id: string;
+  phone: string;
+  intent: string;
+  source: string;
+  created_at: string;
+  status: 'New' | 'Contacted';
+}
+
+export interface Reservation {
+  id: string;
+  name: string;
+  phone: string;
+  date: string;
+  time: string;
+  created_at: string;
+}
