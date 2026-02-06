@@ -31,6 +31,7 @@ export const MENU_ITEMS: MenuItem[] = [
     image: 'https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&q=80&w=800',
     featured: true,
     highMargin: true,
+    highlyRecommended: true,
   },
   {
     id: 'api2',
@@ -41,7 +42,7 @@ export const MENU_ITEMS: MenuItem[] = [
     subCategory: 'Indian',
     image: 'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?auto=format&fit=crop&q=80&w=800',
     featured: true,
-},
+  },
   // Appetizers - Continental
   {
     id: 'apc1',
@@ -105,7 +106,8 @@ export const MENU_ITEMS: MenuItem[] = [
     price: '₹525',
     category: 'Main Course',
     subCategory: 'Around the World',
-    image: 'https://images.unsplash.com/photo-1546549032-9571cd6b27df?auto=format&fit=crop&q=80&w=800'
+    image: 'https://images.unsplash.com/photo-1546549032-9571cd6b27df?auto=format&fit=crop&q=80&w=800',
+    highlyRecommended: true,
   },
   {
     id: 'mcw2',
@@ -123,7 +125,8 @@ export const MENU_ITEMS: MenuItem[] = [
     description: 'Decadent chocolate brownie with vanilla gelato and hot chocolate sauce.',
     price: '₹350',
     category: 'Desserts',
-    image: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&q=80&w=800'
+    image: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&q=80&w=800',
+    highlyRecommended: true,
   },
   {
     id: 'd2',

@@ -47,7 +47,7 @@ const AppContent: React.FC = () => {
         </main>
 
         {!location.pathname.startsWith('/admin') && <Footer />}
-        <ChatConcierge />
+        {!location.pathname.startsWith('/admin') && <ChatConcierge />}
       </div>
     </>
   );

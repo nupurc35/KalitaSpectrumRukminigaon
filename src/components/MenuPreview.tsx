@@ -3,9 +3,19 @@ import { Link } from 'react-router-dom';
 import { MENU_ITEMS } from '../constants/menu';
 
 const MenuPreview: React.FC = () => {
-  // Get featured items or first 3 items
-  const featuredItems = MENU_ITEMS.filter(item => item.featured).slice(0, 3);
-  const previewItems = featuredItems.length >= 3 ? featuredItems : MENU_ITEMS.slice(0, 3);
+  console.log(
+    'MenuPreview MENU_ITEMS (featured/highMargin):',
+    MENU_ITEMS.map((item) => ({
+      id: item.id,
+      name: item.name,
+      featured: item.featured,
+      highMargin: item.highMargin
+    }))
+  );
+
+  const previewItems = MENU_ITEMS
+    .filter((item) => item.featured === true)
+    .slice(0, 3);
 
   return (
     <section className="py-24 px-6 bg-accent">
@@ -24,7 +34,7 @@ const MenuPreview: React.FC = () => {
           {previewItems.map((item) => (
             <article 
               key={item.id}
-              className="scroll-reveal opacity-100 translate-y-0 md:opacity-0 md:translate-y-10 transition-all duration-1000 ease-out bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all group"
+              className="scroll-reveal opacity-100 translate-y-0 transition-all duration-1000 ease-out bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all group"
             >
               <div className="relative h-48 overflow-hidden">
                 <img 
@@ -35,6 +45,11 @@ const MenuPreview: React.FC = () => {
                 {item.featured && (
                   <span className="absolute top-4 left-4 text-[9px] uppercase font-semibold tracking-[0.18em] px-3 py-1 rounded-full bg-secondary text-white">
                     Chef's Special
+                  </span>
+                )}
+                {item.highlyRecommended && (
+                  <span className="absolute top-5 right-5 text-[10px] uppercase font-semibold tracking-[0.25em] px-4 py-1.5 rounded-full bg-primary text-white">
+                    Highly Recommended
                   </span>
                 )}
               </div>

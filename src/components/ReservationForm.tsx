@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { ChangeEvent } from 'react';
-import { saveReservation } from '../services/reservationService';
+import { saveReservationToLocalStorage, type ReservationData } from '../services/reservationService';
 import { validateIndianPhoneNumber } from '../utils/phoneValidation';
 import analytics from '../services/analytics';
 import { supabase } from "../lib/superbase";
@@ -29,17 +29,16 @@ export default function ReservationForm() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Generate time slots (every 30 minutes from 12:00 PM to 11:30 PM)
+  // Generate time slots (every 30 minutes from 12:00 PM to 10:00 PM)
   const generateTimeSlots = () => {
-    const slots = [];
-    for (let hour = 12; hour < 24; hour++) {
+    const slots: string[] = [];
+    for (let hour = 12; hour < 22; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
         const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
         slots.push(timeString);
       }
     }
-    // Add 00:00 for midnight
-    slots.push('00:00');
+    slots.push('22:00');
     return slots;
   };
 
@@ -120,6 +119,22 @@ export default function ReservationForm() {
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
+  const isPhoneValid = formData.phone.trim()
+    ? validateIndianPhoneNumber(formData.phone).isValid
+    : false;
+
+  const isReadyToSubmit = Boolean(
+    formData.name.trim() &&
+    isPhoneValid &&
+    formData.date &&
+    formData.time &&
+    formData.guests &&
+    formData.guests > 0
+  );
+
+  const inputBaseClasses =
+    'h-14 w-full px-5 rounded-lg border text-gray-900 bg-white placeholder:font-semibold placeholder:text-gray-500 focus:border-amber-500 focus:ring-2 focus:ring-amber-400 outline-none transition';
+
   const handleSubmit = async () => {
     if (!validateForm()) {
       return;
@@ -128,13 +143,15 @@ export default function ReservationForm() {
     setIsSubmitting(true);
 
     try {
+      const submittedAt = new Date().toISOString();
+
       // 1. Clean / validate phone
       const phoneValidation = validateIndianPhoneNumber(formData.phone);
       const cleanedPhone = phoneValidation.cleaned || formData.phone;
 
       // 2. Prepare reservation payload
       const reservationData = {
-        restaurant_id: "63bfceb5-1fad-4d42-b0c0-80a29c3e4be2",
+        restaurant_id: import.meta.env.VITE_RESTAURANT_ID || "63bfceb5-1fad-4d42-b0c0-80a29c3e4be2",
         name: formData.name.trim(),
         phone: cleanedPhone,
         date: formData.date,
@@ -142,7 +159,7 @@ export default function ReservationForm() {
         guests: Number(formData.guests),
         occasion: formData.occasion?.trim() || null,
         status: "confirmed",
-        created_at: new Date().toISOString(),
+        created_at: submittedAt,
       };
 
       // 3. Save to Supabase
@@ -154,8 +171,28 @@ export default function ReservationForm() {
         throw error;
       }
 
-      // 4. Navigate to thank-you page
-      navigate("/thank-you");
+      const localReservation: ReservationData = {
+        name: reservationData.name,
+        phone: reservationData.phone,
+        date: reservationData.date,
+        time: reservationData.time,
+        guests: reservationData.guests,
+        occasion: reservationData.occasion || undefined,
+        submittedAt,
+      };
+
+      // Keep a local copy so the Thank You page can show the details even after refresh.
+      saveReservationToLocalStorage(localReservation);
+
+      // Track conversion (avoid PII in analytics payload).
+      analytics.trackReservationSubmit({
+        guests: localReservation.guests,
+        date: localReservation.date,
+        time: localReservation.time,
+      });
+
+      // 4. Navigate to thank-you page (pass state for immediate display)
+      navigate("/thank-you", { state: { reservation: localReservation } });
 
     } catch (error: any) {
       console.error("Reservation error:", {
@@ -186,11 +223,11 @@ export default function ReservationForm() {
             Reserve Your Table
           </h3>
 
-          <div className="space-y-5">
+          <div className="space-y-6">
             {/* Name and Phone */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="reservation-name" className="text-sm text-gray-600 mb-1 block font-medium">
+                <label htmlFor="reservation-name" className="text-sm text-gray-700 mb-1 block font-semibold">
                   Your Name *
                 </label>
                 <input
@@ -199,12 +236,11 @@ export default function ReservationForm() {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="Your Name"
+                  placeholder="Your Full Name"
                   aria-required="true"
                   aria-invalid={errors.name ? 'true' : 'false'}
                   aria-describedby={errors.name ? 'name-error' : undefined}
-                  className={`h-12 w-full px-4 rounded-lg border text-gray-900 bg-white ${errors.name ? 'border-red-500' : 'border-gray-300'
-                    } focus:border-green-500 focus:ring-2 focus:ring-green-500 outline-none transition`}
+                  className={`${inputBaseClasses} ${errors.name ? 'border-red-500' : 'border-gray-300'}`}
                 />
                 {errors.name && (
                   <p id="name-error" className="text-red-500 text-xs mt-1" role="alert">{errors.name}</p>
@@ -212,7 +248,7 @@ export default function ReservationForm() {
               </div>
 
               <div>
-                <label htmlFor="reservation-phone" className="text-sm text-gray-600 mb-1 block font-medium">
+                <label htmlFor="reservation-phone" className="text-sm text-gray-700 mb-1 block font-semibold">
                   Phone Number *
                 </label>
                 <input
@@ -221,12 +257,11 @@ export default function ReservationForm() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  placeholder="9876543210 or +91 9876543210"
+                  placeholder="Phone Number (e.g., +91 9876543210)"
                   aria-required="true"
                   aria-invalid={errors.phone ? 'true' : 'false'}
                   aria-describedby={errors.phone ? 'phone-error' : undefined}
-                  className={`h-12 w-full px-4 rounded-lg border text-gray-900 bg-white${errors.phone ? 'border-red-500' : 'border-gray-300'
-                    } focus:border-green-500 focus:ring-2 focus:ring-green-500 outline-none transition`}
+                  className={`${inputBaseClasses} ${errors.phone ? 'border-red-500' : 'border-gray-300'}`}
                 />
                 {errors.phone && (
                   <p id="phone-error" className="text-red-500 text-xs mt-1" role="alert">{errors.phone}</p>
@@ -235,9 +270,9 @@ export default function ReservationForm() {
             </div>
 
             {/* Date and Time */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="reservation-date" className="text-sm text-gray-600 mb-1 block font-medium">
+                <label htmlFor="reservation-date" className="text-sm text-gray-700 mb-1 block font-semibold">
                   Reservation Date *
                 </label>
                 <input
@@ -250,8 +285,7 @@ export default function ReservationForm() {
                   aria-required="true"
                   aria-invalid={errors.date ? 'true' : 'false'}
                   aria-describedby={errors.date ? 'date-error' : undefined}
-                  className={`h-12 w-full px-4 rounded-lg border text-gray-900 bg-white${errors.date ? 'border-red-500' : 'border-gray-300'
-                    } focus:border-green-500 focus:ring-2 focus:ring-green-500 outline-none transition`}
+                  className={`${inputBaseClasses} ${errors.date ? 'border-red-500' : 'border-gray-300'}`}
                 />
                 {errors.date && (
                   <p id="date-error" className="text-red-500 text-xs mt-1" role="alert">{errors.date}</p>
@@ -259,8 +293,8 @@ export default function ReservationForm() {
               </div>
 
               <div>
-                <label htmlFor="reservation-time" className="text-sm text-gray-600 mb-1 block font-medium">
-                  Reservation Time *
+                <label htmlFor="reservation-time" className="text-sm text-gray-700 mb-1 block font-semibold">
+                  Select Time
                 </label>
                 <select
                   id="reservation-time"
@@ -270,8 +304,7 @@ export default function ReservationForm() {
                   aria-required="true"
                   aria-invalid={errors.time ? 'true' : 'false'}
                   aria-describedby={errors.time ? 'time-error' : undefined}
-                  className={`h-12 w-full px-4 rounded-lg border text-gray-900 bg-white${errors.time ? 'border-red-500' : 'border-gray-300'
-                    } focus:border-green-500 focus:ring-2 focus:ring-green-500 outline-none transition bg-white`}
+                  className={`${inputBaseClasses} ${errors.time ? 'border-red-500' : 'border-gray-300'} bg-white`}
                 >
                   <option value="">Select Time</option>
                   {timeSlots.map((time) => (
@@ -287,9 +320,9 @@ export default function ReservationForm() {
             </div>
 
             {/* Guests and Occasion */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="reservation-guests" className="text-sm text-gray-600 mb-1 block font-medium">
+                <label htmlFor="reservation-guests" className="text-sm text-gray-700 mb-1 block font-semibold">
                   Number of Guests *
                 </label>
                 <input
@@ -303,8 +336,7 @@ export default function ReservationForm() {
                   aria-required="true"
                   aria-invalid={errors.guests ? 'true' : 'false'}
                   aria-describedby={errors.guests ? 'guests-error' : undefined}
-                  className={`h-12 w-full px-4 rounded-lg border text-gray-900 bg-white${errors.guests ? 'border-red-500' : 'border-gray-300'
-                    } focus:border-green-500 focus:ring-2 focus:ring-green-500 outline-none transition`}
+                  className={`${inputBaseClasses} ${errors.guests ? 'border-red-500' : 'border-gray-300'}`}
                 />
                 {errors.guests && (
                   <p id="guests-error" className="text-red-500 text-xs mt-1" role="alert">{errors.guests}</p>
@@ -312,7 +344,7 @@ export default function ReservationForm() {
               </div>
 
               <div>
-                <label htmlFor="reservation-occasion" className="text-sm text-gray-600 mb-1 block font-medium">
+                <label htmlFor="reservation-occasion" className="text-sm text-gray-700 mb-1 block font-semibold">
                   Occasion
                 </label>
                 <input
@@ -322,7 +354,7 @@ export default function ReservationForm() {
                   value={formData.occasion}
                   onChange={handleChange}
                   placeholder="Birthday, Anniversary, etc."
-                  className="h-12 w-full px-4 rounded-lg border border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-500 outline-none transition text-gray-900 bg-white"
+                  className={`${inputBaseClasses} border-gray-300`}
                 />
               </div>
             </div>
@@ -330,9 +362,9 @@ export default function ReservationForm() {
             {/* Submit Button */}
             <button
               onClick={handleSubmit}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !isReadyToSubmit}
               aria-label={isSubmitting ? 'Submitting reservation...' : 'Submit reservation form'}
-              className="mt-6 w-full h-14 rounded-lg bg-[#25D366] text-white text-lg font-semibold hover:bg-[#20BA5A] transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="mt-6 w-full h-16 rounded-lg bg-amber-500 text-white text-lg md:text-xl font-semibold hover:bg-amber-600 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:bg-amber-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>

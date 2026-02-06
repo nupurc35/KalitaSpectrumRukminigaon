@@ -1,22 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { RESTAURANT_NAME, ADDRESS, PHONE, WHATSAPP_LINK, MAP_LINK } from '../constants/menu';
 import { getReservationsFromLocalStorage, type ReservationData } from '../services/reservationService';
 
 const ThankYou: React.FC = () => {
   const [latestReservation, setLatestReservation] = useState<ReservationData | null>(null);
+  const location = useLocation();
 
   useEffect(() => {
+    const reservationFromState = (location.state as { reservation?: ReservationData } | null)?.reservation;
+    if (reservationFromState) {
+      setLatestReservation(reservationFromState);
+      return;
+    }
+
     // Get the most recent reservation from local storage
     const reservations = getReservationsFromLocalStorage();
     if (reservations.length > 0) {
       // Sort by submittedAt (most recent first) and get the latest
-      const sorted = reservations.sort((a, b) =>
-        new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
-      );
+      const sorted = reservations.sort((a, b) => {
+        const aTime = Date.parse(a.submittedAt);
+        const bTime = Date.parse(b.submittedAt);
+        return (Number.isNaN(bTime) ? 0 : bTime) - (Number.isNaN(aTime) ? 0 : aTime);
+      });
       setLatestReservation(sorted[0]);
     }
-  }, []);
+  }, [location.state]);
 
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);

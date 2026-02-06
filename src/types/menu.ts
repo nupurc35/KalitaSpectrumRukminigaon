@@ -10,4 +10,5 @@ export interface MenuItem {
 
   featured?: boolean;
   highMargin?: boolean;
+  highlyRecommended?: boolean;
 }

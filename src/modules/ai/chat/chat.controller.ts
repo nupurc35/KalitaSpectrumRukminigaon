@@ -20,15 +20,12 @@ export function openWhatsApp(message: string): void {
  * Validates and inserts into Supabase (in-chat flow, no WhatsApp redirect)
  */
 export async function handlePhoneSubmit(
-    rawPhone: string,
-    pushUser: (text: string) => void,
-    pushBot: (text: string) => void
-): Promise<{ success: boolean }> {
+    rawPhone: string
+): Promise<{ success: boolean; error?: string }> {
     const phone = rawPhone.replace(/\D/g, "");
 
     if (phone.length < 10) {
-        pushBot(BOT_MESSAGES.INVALID_PHONE);
-        return { success: false };
+        return { success: false, error: "Invalid phone number" };
     }
 
     // 🔹 INSERT INTO SUPABASE
@@ -41,13 +38,8 @@ export async function handlePhoneSubmit(
 
     if (error) {
         console.error("Supabase insert failed:", error);
-        pushBot(BOT_MESSAGES.ERROR);
-        return { success: false };
+        return { success: false, error: "Request failed" };
     }
-
-    // 🔹 In-chat confirmation only (no WhatsApp redirect)
-    pushUser(phone);
-    pushBot(BOT_MESSAGES.PHONE_SUCCESS);
 
     return { success: true };
 }
@@ -92,9 +84,8 @@ export function handleOption(
  */
 export async function handleReservationSubmit(
     e: React.FormEvent<HTMLFormElement>,
-    pushBot: (text: string) => void,
     setShowReservationForm: (value: boolean) => void
-): Promise<void> {
+): Promise<{ success: boolean; error?: string }> {
     e.preventDefault();
     const form = e.currentTarget;
     const data = new FormData(form);
@@ -114,15 +105,14 @@ export async function handleReservationSubmit(
 
         if (error) {
             console.error("Reservation insert failed:", error);
-            pushBot(BOT_MESSAGES.ERROR);
-            return;
+            return { success: false, error: "Reservation failed" };
         }
 
-        pushBot(BOT_MESSAGES.RESERVATION_SUCCESS);
         setShowReservationForm(false);
+        return { success: true };
     } catch (error) {
         console.error("Reservation error:", error);
-        pushBot(BOT_MESSAGES.ERROR);
+        return { success: false, error: "Reservation failed" };
     }
 }
 
@@ -130,5 +120,5 @@ export async function handleReservationSubmit(
  * Resets chat to initial state
  */
 export function getInitialMessages(): Message[] {
-    return [{ from: "bot", text: BOT_MESSAGES.GREETING }];
+    return [];
 }
