@@ -1,15 +1,17 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { RESTAURANT_NAME, GOOGLE_RATING, REVIEW_COUNT } from '../constants/menu';
+import { GOOGLE_RATING, REVIEW_COUNT } from '../constants/menu';
 import WhatsAppButton from "./WhatsAppButton";
 import analytics from '../services/analytics';
+import { useRestaurant } from '../hooks/useRestaurant';
 
 const handleReserveClick = () => {
   analytics.trackReserveButtonClick('Hero Component');
 };
 
 const Hero: React.FC = () => {
+  const { restaurant, loading } = useRestaurant();
   const handleReserveClickWithScroll = (e: React.MouseEvent<HTMLAnchorElement>) => {
     handleReserveClick();
     // If we're on the home page, scroll to reservation section
@@ -21,6 +23,12 @@ const Hero: React.FC = () => {
       }
     }
   };
+
+  if (loading) {
+    return null;
+  }
+
+  const name = restaurant?.name ?? 'Our restaurant';
 
   return (
     <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
@@ -45,7 +53,7 @@ const Hero: React.FC = () => {
         </h1>
         
         <p className="text-lg md:text-xl text-white/80 mb-10 max-w-2xl mx-auto font-light leading-relaxed">
-          {RESTAURANT_NAME} brings a refined fusion of authentic Indian heritage and global culinary artistry to a serene, natural sanctuary.
+          {name} brings a refined fusion of authentic Indian heritage and global culinary artistry to a serene, natural sanctuary.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

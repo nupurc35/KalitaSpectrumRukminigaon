@@ -1,7 +1,17 @@
 import React from 'react';
-import { MAP_LINK, MAP_EMBED_URL, ADDRESS, PHONE } from '../constants/menu';
+import { MAP_LINK, MAP_EMBED_URL } from '../constants/menu';
+import { useRestaurant } from '../hooks/useRestaurant';
 
 const LocationSection: React.FC = () => {
+  const { restaurant, loading } = useRestaurant();
+  const displayPhone = restaurant?.phone ?? '';
+  const phoneHref = displayPhone ? `tel:${displayPhone.replace(/\s/g, '')}` : undefined;
+  const name = restaurant?.name ?? 'our restaurant';
+
+  if (loading) {
+    return null;
+  }
+
   return (
     <section className="py-24 px-6 bg-accent">
       <div className="max-w-7xl mx-auto">
@@ -12,16 +22,16 @@ const LocationSection: React.FC = () => {
             <div className="space-y-8">
               <div>
                 <p className="text-white/50 uppercase text-[10px] tracking-widest font-bold mb-2">Our Address</p>
-                <p className="text-white text-lg leading-relaxed">{ADDRESS}</p>
+                <p className="text-white text-lg leading-relaxed">{restaurant?.address}</p>
               </div>
               <div>
                 <p className="text-white/50 uppercase text-[10px] tracking-widest font-bold mb-2">Direct Contact</p>
                 <a 
-                  href={`tel:${PHONE.replace(/\s/g, '')}`} 
-                  aria-label={`Call Kalita Spectrum at ${PHONE}`}
+                  href={phoneHref} 
+                  aria-label={`Call ${name} at ${displayPhone}`}
                   className="text-secondary text-3xl font-serif hover:text-white transition-colors"
                 >
-                  {PHONE}
+                  {displayPhone}
                 </a>
               </div>
               <div>
@@ -34,7 +44,7 @@ const LocationSection: React.FC = () => {
                   href={MAP_LINK} 
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Open Kalita Spectrum location in Google Maps"
+                  aria-label={`Open ${name} location in Google Maps`}
                   className="inline-flex items-center space-x-3 bg-secondary text-primary px-8 py-4 rounded-full text-sm font-bold uppercase tracking-widest hover:bg-white transition-all shadow-xl shadow-secondary/10"
                 >
                   <span>Open in Google Maps</span>
@@ -53,7 +63,7 @@ const LocationSection: React.FC = () => {
               loading="lazy" 
               referrerPolicy="no-referrer-when-downgrade"
               className="grayscale-[0.1] contrast-[1.1] hover:grayscale-0 transition-all duration-700"
-              title="Kalita Spectrum Location"
+              title={`${name} location`}
             ></iframe>
           </div>
         </div>

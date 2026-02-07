@@ -1,8 +1,26 @@
 import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { fetchLeads, fetchReservations, updateLeadStatus, deleteLead, updateReservationStatus } from "../../services/adminService";
 import AdminHeader from "./adminNavbar";
-import { supabase } from "@/lib/superbase";
 import { Lead, Reservation } from "../../types";
+import AdminDashboardStats from "./AdminDashboardStats";
+import { supabase } from "@/lib/superbase";
+
+type TopItem = {
+  name: string;
+  quantity: number;
+};
+
+type TopItemRow = {
+  menu_item_id: string | null;
+  quantity_sum: number | null;
+  menu_items: { name: string | null } | null;
+};
+
+type RevenueRow = {
+  quantity: number | null;
+  price_at_time: number | null;
+};
 
 const Dashboard: React.FC = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -11,6 +29,12 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [topItems, setTopItems] = useState<TopItem[]>([]);
+  const [totalRevenue, setTotalRevenue] = useState<number | null>(null);
+  const [totalOrders, setTotalOrders] = useState<number | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
 
 
 
@@ -45,6 +69,78 @@ const Dashboard: React.FC = () => {
       setReservations(reservationData || []);
     };
     loadData();
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+
+    const loadAnalytics = async () => {
+      setAnalyticsLoading(true);
+
+      const [topItemsResult, revenueResult, ordersResult] = await Promise.all([
+        supabase
+          .from("order_items")
+          .select("menu_item_id, quantity.sum(), menu_items ( name ), orders!inner ( created_at )")
+          .gte("orders.created_at", fourteenDaysAgo)
+          .order("quantity_sum", { ascending: false })
+          .limit(3),
+        supabase
+          .from("order_items")
+          .select("quantity, price_at_time, orders!inner ( created_at, status )")
+          .gte("orders.created_at", fourteenDaysAgo)
+          .eq("orders.status", "paid"),
+        supabase
+          .from("orders")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", fourteenDaysAgo)
+          .eq("status", "paid"),
+      ]);
+
+      if (topItemsResult.error) {
+        console.error("Failed to load top items:", topItemsResult.error);
+      }
+      if (revenueResult.error) {
+        console.error("Failed to load revenue data:", revenueResult.error);
+      }
+      if (ordersResult.error) {
+        console.error("Failed to load orders count:", ordersResult.error);
+      }
+
+      const topItemsRows = (topItemsResult.data ?? []) as TopItemRow[];
+      const nextTopItems = topItemsRows.map((row) => ({
+          name: row.menu_items?.name ?? "Unnamed Item",
+          quantity: Number(row.quantity_sum ?? 0),
+        }));
+
+      const revenueRows = (revenueResult.data ?? []) as RevenueRow[];
+      const nextRevenue = revenueRows.reduce((sum, row) => {
+        const quantity = Number(row.quantity ?? 0);
+        const price = Number(row.price_at_time ?? 0);
+        return sum + quantity * price;
+      }, 0);
+
+      if (isMounted) {
+        setTopItems(topItemsResult.error ? [] : nextTopItems);
+        setTotalRevenue(revenueResult.error ? null : nextRevenue);
+        setTotalOrders(ordersResult.error ? null : ordersResult.count ?? 0);
+        setAnalyticsLoading(false);
+      }
+    };
+
+    loadAnalytics().catch((err) => {
+      console.error("Failed to load analytics data:", err);
+      if (isMounted) {
+        setTopItems([]);
+        setTotalRevenue(null);
+        setTotalOrders(null);
+        setAnalyticsLoading(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const loadMoreLeads = async () => {
@@ -132,17 +228,95 @@ const Dashboard: React.FC = () => {
             <p className="text-white/40">Welcome back to your control center.</p>
           </header>
 
-          {/* KPI SECTION */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-            <div className="group p-8 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all duration-300">
-              <p className="text-sm uppercase tracking-widest text-white/40 font-medium mb-2">Total Leads</p>
-              <p className="text-5xl font-serif text-white group-hover:scale-105 transition-transform duration-300 origin-left">{leads.length}</p>
+          <div className="mb-12">
+            <AdminDashboardStats />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+              <p className="text-xs uppercase tracking-widest text-white/40 font-medium mb-4">
+                Top 3 Items (Last 14 Days)
+              </p>
+              {analyticsLoading ? (
+                <div className="space-y-2">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div key={`top-item-skeleton-${index}`} className="h-4 bg-white/10 rounded" />
+                  ))}
+                </div>
+              ) : topItems.length === 0 ? (
+                <p className="text-sm text-white/40">No data available.</p>
+              ) : (
+                <div className="space-y-3">
+                  {topItems.map((item) => (
+                    <div key={item.name} className="flex items-center justify-between">
+                      <span className="text-sm text-white/80">{item.name}</span>
+                      <span className="text-sm text-white/60">{item.quantity} sold</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="group p-8 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all duration-300">
-              <p className="text-sm uppercase tracking-widest text-white/40 font-medium mb-2">Reservations</p>
-              <p className="text-5xl font-serif text-white group-hover:scale-105 transition-transform duration-300 origin-left">{reservations.length}</p>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+              <p className="text-xs uppercase tracking-widest text-white/40 font-medium mb-4">
+                Total Revenue (14D)
+              </p>
+              {analyticsLoading ? (
+                <div className="h-9 w-32 bg-white/10 rounded" />
+              ) : totalRevenue === null ? (
+                <p className="text-3xl font-serif text-white/40">—</p>
+              ) : (
+                <p className="text-3xl font-serif text-white">
+                  ₹{totalRevenue.toLocaleString()}
+                </p>
+              )}
             </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+              <p className="text-xs uppercase tracking-widest text-white/40 font-medium mb-4">
+                Total Orders (14D)
+              </p>
+              {analyticsLoading ? (
+                <div className="h-9 w-24 bg-white/10 rounded" />
+              ) : totalOrders === null ? (
+                <p className="text-3xl font-serif text-white/40">—</p>
+              ) : (
+                <p className="text-3xl font-serif text-white">
+                  {totalOrders.toLocaleString()}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-8 mb-8 border-b border-white/10">
+            <button
+              type="button"
+              onClick={() => navigate("/admin/menu")}
+              className={`pb-4 text-xs font-bold uppercase tracking-widest transition-all relative ${
+                location.pathname.includes("/admin/menu")
+                  ? "text-white"
+                  : "text-white/50 hover:text-white"
+              }`}
+            >
+              Menu Items
+              {location.pathname.includes("/admin/menu") && (
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-secondary" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/admin/categories")}
+              className={`pb-4 text-xs font-bold uppercase tracking-widest transition-all relative ${
+                location.pathname.includes("/admin/categories")
+                  ? "text-white"
+                  : "text-white/50 hover:text-white"
+              }`}
+            >
+              Categories
+              {location.pathname.includes("/admin/categories") && (
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-secondary" />
+              )}
+            </button>
           </div>
 
           {/* TABS */}

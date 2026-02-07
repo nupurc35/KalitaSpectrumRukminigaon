@@ -5,9 +5,12 @@ import ReservationForm from '../components/ReservationForm';
 import WhySection from '../components/WhySection';
 import MenuPreview from '../components/MenuPreview';
 import GalleryPreview from '../components/GalleryPreview';
+import { useRestaurant } from '../hooks/useRestaurant';
 
 
 const Home: React.FC = () => {
+  const { restaurant, loading } = useRestaurant();
+
   useEffect(() => {
     const observerOptions = { threshold: 0.1 };
     const observer = new IntersectionObserver((entries) => {
@@ -23,10 +26,14 @@ const Home: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
+  if (loading) {
+    return null;
+  }
+
   return (
     <>
       {/* 1. Hero Section */}
-      <HeroSection />
+      <HeroSection restaurantName={restaurant?.name ?? undefined} />
 
       {/* 2. Trust Section */}
       <TrustSection />

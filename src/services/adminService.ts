@@ -55,16 +55,3 @@ export const updateReservationStatus = async (
     .eq("id", id)
     .select();
 };
-
-/*export const fetchLeads = async () => {
-  console.log("fetchLeads called");
-
-  const res = await supabase
-    .from("leads")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  console.log("fetchLeads result:", res);
-
-  return res;
-}; */

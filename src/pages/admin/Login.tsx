@@ -15,8 +15,6 @@ const handleLogin = async (e: React.FormEvent) => {
     password,
   });
 
-  console.log("LOGIN RESULT:", data, error);
-
   if (error) {
     setError(error.message);
     return;

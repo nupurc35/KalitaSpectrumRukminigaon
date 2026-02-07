@@ -1,27 +1,20 @@
 import React from 'react';
-import { RESTAURANT_NAME, ADDRESS, PHONE, GOOGLE_RATING, REVIEW_COUNT, MAP_LINK } from '../constants/menu';
+import { GOOGLE_RATING, REVIEW_COUNT, MAP_LINK } from '../constants/menu';
+import { useRestaurant } from '../hooks/useRestaurant';
 
 const StructuredData: React.FC = () => {
-  const structuredData = {
+  const { restaurant, loading } = useRestaurant();
+
+  if (loading) {
+    return null;
+  }
+
+  const structuredData: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Restaurant",
-    "name": RESTAURANT_NAME,
+    "name": restaurant?.name ?? "",
     "image": "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&q=80&w=2000",
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "GS Rd, Opp. Pantaloons, Rukmini Gaon",
-      "addressLocality": "Guwahati",
-      "addressRegion": "Assam",
-      "postalCode": "781006",
-      "addressCountry": "IN"
-    },
-    "geo": {
-      "@type": "GeoCoordinates",
-      "latitude": "26.1362685",
-      "longitude": "91.8024565"
-    },
     "url": "https://kalitaspectrum.com",
-    "telephone": PHONE.replace(/\s/g, ''),
     "priceRange": "₹₹₹",
     "servesCuisine": ["Indian", "Continental", "Asian"],
     "openingHoursSpecification": [
@@ -58,6 +51,17 @@ const StructuredData: React.FC = () => {
       MAP_LINK
     ]
   };
+
+  if (restaurant?.address) {
+    structuredData.address = {
+      "@type": "PostalAddress",
+      "streetAddress": restaurant.address
+    };
+  }
+
+  if (restaurant?.phone) {
+    structuredData.telephone = restaurant.phone.replace(/\s/g, '');
+  }
 
   return (
     <script

@@ -64,22 +64,10 @@ class GoogleAnalyticsProvider implements TrackingProvider {
 class MockTrackingProvider implements TrackingProvider {
   trackPageView(path: string, title?: string): void {
     if (!ENABLE_TRACKING) return;
-    
-    console.log('[Analytics Mock] Page View:', {
-      path,
-      title,
-      timestamp: new Date().toISOString(),
-    });
   }
 
   trackEvent(eventName: string, params?: Record<string, any>): void {
     if (!ENABLE_TRACKING) return;
-    
-    console.log('[Analytics Mock] Event:', {
-      eventName,
-      params,
-      timestamp: new Date().toISOString(),
-    });
   }
 }
 

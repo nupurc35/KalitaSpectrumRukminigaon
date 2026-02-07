@@ -3,16 +3,6 @@ import { Link } from 'react-router-dom';
 import { MENU_ITEMS } from '../constants/menu';
 
 const MenuPreview: React.FC = () => {
-  console.log(
-    'MenuPreview MENU_ITEMS (featured/highMargin):',
-    MENU_ITEMS.map((item) => ({
-      id: item.id,
-      name: item.name,
-      featured: item.featured,
-      highMargin: item.highMargin
-    }))
-  );
-
   const previewItems = MENU_ITEMS
     .filter((item) => item.featured === true)
     .slice(0, 3);

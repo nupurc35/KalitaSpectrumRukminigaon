@@ -1,14 +1,23 @@
 
 import React from 'react';
-import { RESTAURANT_NAME, ADDRESS, PHONE } from '../constants/menu';
+import { useRestaurant } from '../hooks/useRestaurant';
 
 const Footer: React.FC = () => {
+  const { restaurant, loading } = useRestaurant();
+  const name = restaurant?.name ?? 'Our Restaurant';
+  const address = restaurant?.address ?? '';
+  const phone = restaurant?.phone ?? '';
+
+  if (loading) {
+    return null;
+  }
+
   return (
     <footer className="bg-primary text-white py-20 px-6 border-t border-white/5">
       <div className="max-w-7xl mx-auto">
         <div className="grid md:grid-cols-4 gap-12 mb-16">
           <div className="col-span-2">
-            <h3 className="text-4xl font-serif font-bold mb-6 italic">{RESTAURANT_NAME}</h3>
+            <h3 className="text-4xl font-serif font-bold mb-6 italic">{name}</h3>
             <p className="text-white/40 max-w-sm mb-8 leading-relaxed">
               Experience the vibrant spectrum of modern culinary artistry. A destination where local Indian heritage meets global sophistication.
             </p>
@@ -24,8 +33,8 @@ const Footer: React.FC = () => {
           <div>
             <h4 className="text-secondary uppercase tracking-widest text-xs font-bold mb-6">Contact</h4>
             <ul className="space-y-4 text-sm text-white/60">
-              <li>{ADDRESS}</li>
-              <li className="text-white font-bold">{PHONE}</li>
+              <li>{address}</li>
+              <li className="text-white font-bold">{phone}</li>
               <li>info@kalitaspectrum.com</li>
             </ul>
           </div>
@@ -50,7 +59,7 @@ const Footer: React.FC = () => {
         </div>
         <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
           <p className="text-[10px] text-white/30 uppercase tracking-[0.2em]">
-            &copy; {new Date().getFullYear()} {RESTAURANT_NAME}. All Rights Reserved.
+            &copy; {new Date().getFullYear()} {name}. All Rights Reserved.
           </p>
           <div className="flex space-x-6 text-[10px] text-white/30 uppercase tracking-[0.2em]">
             <a href="#" className="hover:text-white">Privacy</a>

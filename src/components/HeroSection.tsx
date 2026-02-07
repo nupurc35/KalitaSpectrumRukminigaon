@@ -1,8 +1,13 @@
 import React from 'react';
-import { RESTAURANT_NAME } from '../constants/menu';
 import analytics from '../services/analytics';
 
-const HeroSection: React.FC = () => {
+type HeroSectionProps = {
+  restaurantName?: string;
+};
+
+const HeroSection: React.FC<HeroSectionProps> = ({ restaurantName }) => {
+  const displayName = restaurantName || 'Our Restaurant';
+
   const handleReserveClick = () => {
     // Track reserve button click
     analytics.trackReserveButtonClick('Hero Section');
@@ -21,7 +26,7 @@ const HeroSection: React.FC = () => {
         <img 
           src="https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&q=80&w=2000" 
           className="w-full h-full object-cover"
-          alt="Kalita Spectrum Restaurant in Rukminigaon, Guwahati - Premium dining space with elegant ambiance"
+          alt={`${displayName} - Premium dining space with elegant ambiance`}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-primary/70 via-primary/40 to-primary"></div>
       </div>
@@ -29,7 +34,7 @@ const HeroSection: React.FC = () => {
       {/* Content */}
       <div className="relative z-10 text-center px-6 max-w-4xl">
         <h1 className="text-5xl md:text-7xl font-serif mb-4 leading-tight">
-          {RESTAURANT_NAME}
+          {displayName}
         </h1>
         
         <p className="text-lg md:text-xl text-white/90 mb-10 max-w-2xl mx-auto font-light leading-relaxed">
@@ -38,7 +43,7 @@ const HeroSection: React.FC = () => {
 
         <button
           onClick={handleReserveClick}
-          aria-label="Book a table at Kalita Spectrum restaurant"
+          aria-label={`Book a table at ${displayName}`}
           className="bg-secondary text-primary px-10 py-4 rounded-full text-lg font-bold transition-all hover:scale-105 active:scale-95 shadow-xl shadow-secondary/20"
         >
           Book a Table

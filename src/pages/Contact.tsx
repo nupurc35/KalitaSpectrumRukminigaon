@@ -1,14 +1,23 @@
 import React, { useState } from "react";
-import { MAP_LINK, MAP_EMBED_URL, ADDRESS, PHONE } from "../constants/menu";
+import { MAP_LINK, MAP_EMBED_URL } from "../constants/menu";
 import { createLead } from "../services/leadService";
 import { KALITA_RESTAURANT_ID } from "../constants/restaurent";
+import { useRestaurant } from "../hooks/useRestaurant";
 
 const Contact: React.FC = () => {
+  const { restaurant, loading: restaurantLoading } = useRestaurant();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  if (restaurantLoading) {
+    return null;
+  }
+
+  const displayPhone = restaurant?.phone ?? "";
+  const phoneHref = displayPhone ? `tel:${displayPhone.replace(/\s/g, "")}` : undefined;
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,18 +63,18 @@ const Contact: React.FC = () => {
               Contact Us
             </span>
 
-            <h3 className="text-4xl md:text-5xl font-serif mb-8 text-white italic">
+              <h3 className="text-4xl md:text-5xl font-serif mb-8 text-white italic">
               Get in Touch
             </h3>
 
             <div className="space-y-6">
-              <p className="text-white/70">{ADDRESS}</p>
+              <p className="text-white/70">{restaurant?.address}</p>
 
               <a
-                href={`tel:${PHONE.replace(/\s/g, "")}`}
+                href={phoneHref}
                 className="text-secondary text-2xl font-serif hover:text-white"
               >
-                {PHONE}
+                {displayPhone}
               </a>
 
               {/* CONTACT FORM */}

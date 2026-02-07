@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
-import { RESTAURANT_NAME } from '../constants/menu';
+import { useRestaurant } from '../hooks/useRestaurant';
 
 const About: React.FC = () => {
+  const { restaurant, loading } = useRestaurant();
+
   useEffect(() => {
     const observerOptions = { threshold: 0.1 };
     const observer = new IntersectionObserver((entries) => {
@@ -16,6 +18,13 @@ const About: React.FC = () => {
     document.querySelectorAll('.scroll-reveal').forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, []);
+
+  const address = restaurant?.address ?? 'the heart of the city';
+  const name = restaurant?.name ?? 'our restaurant';
+
+  if (loading) {
+    return null;
+  }
 
   return (
     <section className="relative py-32 px-6 overflow-hidden scroll-mt-24 min-h-screen flex items-center">
@@ -32,7 +41,7 @@ const About: React.FC = () => {
         <div className="relative order-2 md:order-1">
           <img 
             src="https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=1200" 
-            alt="Kalita Spectrum Interior"
+            alt={`${name} interior`}
             className="rounded-3xl shadow-2xl relative z-10 w-full h-[500px] object-cover border border-white/10"
           />
           <div className="absolute -bottom-6 -right-6 w-full h-full border-2 border-secondary rounded-3xl z-0 opacity-50"></div>
@@ -41,7 +50,7 @@ const About: React.FC = () => {
           <span className="text-secondary uppercase text-[10px] tracking-[0.4em] font-bold mb-4 block">Our Philosophy</span>
           <h2 className="text-4xl md:text-6xl font-serif mb-8 leading-tight">Authentic Soul, <br />Modern Craft.</h2>
           <p className="text-white/80 text-lg mb-6 leading-relaxed">
-            Located in the heart of Guwahati at GS Road, {RESTAURANT_NAME} is an urban sanctuary where culinary borders fade. We blend high-art Indian gastronomy with sophisticated global influences.
+            Located at {address}, {name} is an urban sanctuary where culinary borders fade. We blend high-art Indian gastronomy with sophisticated global influences.
           </p>
           <p className="text-white/70 text-lg mb-8 leading-relaxed italic border-l-2 border-secondary pl-6">
             "Our mission is to serve as the definitive spectrum of modern dining—a place where every flavor tells a story of tradition and innovation, set against the backdrop of natural elegance."

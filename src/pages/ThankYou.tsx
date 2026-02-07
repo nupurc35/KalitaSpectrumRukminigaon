@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { RESTAURANT_NAME, ADDRESS, PHONE, WHATSAPP_LINK, MAP_LINK } from '../constants/menu';
+import { WHATSAPP_LINK, MAP_LINK } from '../constants/menu';
 import { getReservationsFromLocalStorage, type ReservationData } from '../services/reservationService';
+import { useRestaurant } from '../hooks/useRestaurant';
 
 const ThankYou: React.FC = () => {
+  const { restaurant, loading } = useRestaurant();
   const [latestReservation, setLatestReservation] = useState<ReservationData | null>(null);
   const location = useLocation();
 
@@ -46,6 +48,14 @@ const ThankYou: React.FC = () => {
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
+  if (loading) {
+    return null;
+  }
+
+  const displayPhone = restaurant?.phone ?? '';
+  const phoneHref = displayPhone ? `tel:${displayPhone.replace(/\s/g, '')}` : undefined;
+  const name = restaurant?.name ?? 'our restaurant';
+
   return (
     <section className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6 py-24">
       <div className="max-w-3xl mx-auto w-full">
@@ -63,7 +73,7 @@ const ThankYou: React.FC = () => {
             </h1>
 
             <p className="text-lg text-gray-600 mb-2 leading-relaxed">
-              Thank you for choosing <span className="font-bold text-primary">{RESTAURANT_NAME}</span>
+              Thank you for choosing <span className="font-bold text-primary">{name}</span>
             </p>
 
             <p className="text-base text-gray-500">
@@ -165,11 +175,11 @@ const ThankYou: React.FC = () => {
                 <h3 className="text-lg font-bold text-gray-800">Call Us</h3>
               </div>
               <a
-                href={`tel:${PHONE.replace(/\s/g, '')}`}
+                href={phoneHref}
                 className="text-2xl font-bold text-primary hover:text-secondary transition-colors block mb-2"
-                aria-label={`Call ${RESTAURANT_NAME} at ${PHONE}`}
+                aria-label={`Call ${name} at ${displayPhone}`}
               >
-                {PHONE}
+                {displayPhone}
               </a>
               <p className="text-sm text-gray-600">
                 Available during restaurant hours
@@ -191,7 +201,7 @@ const ThankYou: React.FC = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-lg font-semibold text-[#25D366] hover:text-[#20BA5A] transition-colors block mb-2"
-                aria-label="Contact Kalita Spectrum on WhatsApp"
+                aria-label={`Contact ${name} on WhatsApp`}
               >
                 Message Us on WhatsApp
               </a>
@@ -213,14 +223,14 @@ const ThankYou: React.FC = () => {
                   Visit Us
                 </h3>
                 <p className="text-gray-700 leading-relaxed mb-3">
-                  {ADDRESS}
+                  {restaurant?.address}
                 </p>
                 <a
                   href={MAP_LINK}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:text-secondary text-sm font-semibold inline-flex items-center gap-1"
-                  aria-label="Open Kalita Spectrum location in Google Maps"
+                  aria-label={`Open ${name} location in Google Maps`}
                 >
                   View on Google Maps
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

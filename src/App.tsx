@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -14,11 +14,30 @@ import { usePageTracking } from './hooks/usePageTracking';
 import ChatConcierge from "./modules/ai/chat/ChatConcierge";
 import Login from "./pages/admin/Login";
 import ProtectedRoute from "./components/protectedRoute";
+import MenuManager from "./pages/admin/MenuManager";
+import { useRestaurant } from "./hooks/useRestaurant";
+import CategoryManager from './pages/admin/CategoryManager';
+import CreateOrder from "./pages/admin/CreateOrder";
 
 const AppContent: React.FC = () => {
   // Track page views on route changes
   usePageTracking();
   const location = useLocation();
+  const { restaurant, loading: restaurantLoading } = useRestaurant();
+
+  useEffect(() => {
+    if (restaurant?.theme_color) {
+      document.documentElement.style.setProperty("--primary-color", restaurant.theme_color);
+    }
+  }, [restaurant?.theme_color]);
+
+  if (restaurantLoading) {
+    return (
+      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
+        <span className="text-lg font-semibold tracking-wide text-white/80">Loading...</span>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -42,7 +61,17 @@ const AppContent: React.FC = () => {
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/admin/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/admin/login" element={<Login />} />
+            <Route
+              path="/admin/menu"
+              element={
+                <ProtectedRoute>
+                  <MenuManager />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/admin/categories" element={<ProtectedRoute><CategoryManager /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/admin/create-order" element={<ProtectedRoute><CreateOrder /></ProtectedRoute>} />
           </Routes>
         </main>
 
