@@ -1,15 +1,55 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import type { ChangeEvent } from 'react';
 import { saveReservationToLocalStorage, type ReservationData } from '../services/reservationService';
 import { validateIndianPhoneNumber } from '../utils/phoneValidation';
+import {
+  email as emailValidator,
+  futureDate,
+  indianPhone,
+  numberInRange,
+  required,
+  type Validator,
+  validateField,
+  validateForm as validateFormValues,
+} from '../utils/validation';
 import analytics from '../services/analytics';
 import { supabase } from "../lib/superbase";
+import { useRestaurant } from '../hooks/useRestaurant';
+
+type ReservationFormData = {
+  name: string;
+  email: string;
+  phone: string;
+  date: string;
+  time: string;
+  guests: number;
+  occasion: string;
+};
+
+const reservationValidationRules: {
+  [K in keyof ReservationFormData]?: Validator<any>[];
+} = {
+  name: [required('Name is required')],
+  email: [required('Email is required'), emailValidator('Please enter a valid email')],
+  phone: [required('Phone number is required'), indianPhone()],
+  date: [required('Reservation date is required'), futureDate('Please select a future date')],
+  time: [required('Reservation time is required')],
+  guests: [
+    numberInRange(1, 20, {
+      messages: {
+        min: 'Number of guests must be at least 1',
+        max: 'Maximum 20 guests per reservation',
+        invalid: 'Number of guests must be at least 1',
+      },
+    }),
+  ],
+};
 
 export default function ReservationForm() {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+  const { restaurant } = useRestaurant();
+  const [formData, setFormData] = useState<ReservationFormData>({
     name: '',
+    email: '',
     phone: '',
     date: '',
     time: '',
@@ -19,6 +59,7 @@ export default function ReservationForm() {
 
   type FormErrors = {
     name?: string;
+    email?: string;
     phone?: string;
     date?: string;
     time?: string;
@@ -28,6 +69,9 @@ export default function ReservationForm() {
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+  const [confirmedReservation, setConfirmedReservation] = useState<ReservationData | null>(null);
 
   // Generate time slots (every 30 minutes from 12:00 PM to 10:00 PM)
   const generateTimeSlots = () => {
@@ -45,43 +89,7 @@ export default function ReservationForm() {
   const timeSlots = generateTimeSlots();
 
   const validateForm = () => {
-    const newErrors: FormErrors = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-    } else {
-      const phoneValidation = validateIndianPhoneNumber(formData.phone);
-      if (!phoneValidation.isValid) {
-        newErrors.phone = phoneValidation.error || 'Please enter a valid phone number';
-      }
-    }
-
-    if (!formData.date) {
-      newErrors.date = 'Reservation date is required';
-    } else {
-      const selectedDate = new Date(formData.date);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      if (selectedDate < today) {
-        newErrors.date = 'Please select a future date';
-      }
-    }
-
-    if (!formData.time) {
-      newErrors.time = 'Reservation time is required';
-    }
-
-    if (!formData.guests || formData.guests < 1) {
-      newErrors.guests = 'Number of guests must be at least 1';
-    } else if (formData.guests > 20) {
-      newErrors.guests = 'Maximum 20 guests per reservation';
-    }
-
+    const newErrors = validateFormValues(formData, reservationValidationRules);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -108,6 +116,12 @@ export default function ReservationForm() {
         [name]: ''
       }));
     }
+
+    if (submitStatus !== 'idle') {
+      setSubmitStatus('idle');
+      setSubmitMessage(null);
+      setConfirmedReservation(null);
+    }
   };
 
   const formatTimeForDisplay = (time: string): string => {
@@ -119,21 +133,84 @@ export default function ReservationForm() {
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
-  const isPhoneValid = formData.phone.trim()
-    ? validateIndianPhoneNumber(formData.phone).isValid
-    : false;
+  const nameError = validateField(formData.name, reservationValidationRules.name ?? []);
+  const emailError = validateField(formData.email, reservationValidationRules.email ?? []);
+  const phoneError = validateField(formData.phone, reservationValidationRules.phone ?? []);
+  const dateError = validateField(formData.date, reservationValidationRules.date ?? []);
+  const timeError = validateField(formData.time, reservationValidationRules.time ?? []);
+  const guestsError = validateField(formData.guests, reservationValidationRules.guests ?? []);
+  const isPhoneValid = !phoneError;
 
   const isReadyToSubmit = Boolean(
-    formData.name.trim() &&
+    !nameError &&
+    !emailError &&
     isPhoneValid &&
-    formData.date &&
-    formData.time &&
-    formData.guests &&
-    formData.guests > 0
+    !dateError &&
+    !timeError &&
+    !guestsError
   );
 
   const inputBaseClasses =
     'h-14 w-full px-5 rounded-lg border text-gray-900 bg-white placeholder:font-semibold placeholder:text-gray-500 focus:border-amber-500 focus:ring-2 focus:ring-amber-400 outline-none transition';
+
+  const handleNewReservation = () => {
+    setSubmitStatus('idle');
+    setSubmitMessage(null);
+    setConfirmedReservation(null);
+    setErrors({});
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      date: '',
+      time: '',
+      guests: 2,
+      occasion: ''
+    });
+  };
+
+  if (submitStatus === 'success' && confirmedReservation) {
+    return (
+      <section
+        id="reservation-section"
+        className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6"
+      >
+        <div className="w-full max-w-2xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="text-3xl font-bold text-gray-800 mb-3">Reservation Confirmed</h3>
+            <p className="text-gray-600 mb-6">
+              {submitMessage ?? "Your reservation has been confirmed."}
+            </p>
+            <div className="bg-gray-50 rounded-xl p-6 text-left text-sm text-gray-700 space-y-2 mb-6">
+              <p><span className="font-semibold">Name:</span> {confirmedReservation.name}</p>
+              {confirmedReservation.email && (
+                <p><span className="font-semibold">Email:</span> {confirmedReservation.email}</p>
+              )}
+              <p><span className="font-semibold">Phone:</span> {confirmedReservation.phone}</p>
+              <p><span className="font-semibold">Date:</span> {confirmedReservation.date}</p>
+              <p><span className="font-semibold">Time:</span> {formatTimeForDisplay(confirmedReservation.time)}</p>
+              <p><span className="font-semibold">Guests:</span> {confirmedReservation.guests}</p>
+              {confirmedReservation.occasion && (
+                <p><span className="font-semibold">Occasion:</span> {confirmedReservation.occasion}</p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={handleNewReservation}
+              className="px-6 py-3 rounded-full bg-amber-500 text-white font-semibold hover:bg-amber-600 transition"
+            >
+              Make Another Reservation
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const handleSubmit = async () => {
     if (!validateForm()) {
@@ -141,6 +218,8 @@ export default function ReservationForm() {
     }
 
     setIsSubmitting(true);
+    setSubmitStatus('idle');
+    setSubmitMessage(null);
 
     try {
       const submittedAt = new Date().toISOString();
@@ -148,11 +227,13 @@ export default function ReservationForm() {
       // 1. Clean / validate phone
       const phoneValidation = validateIndianPhoneNumber(formData.phone);
       const cleanedPhone = phoneValidation.cleaned || formData.phone;
+      const cleanedEmail = formData.email.trim().toLowerCase();
 
       // 2. Prepare reservation payload
       const reservationData = {
         restaurant_id: import.meta.env.VITE_RESTAURANT_ID || "63bfceb5-1fad-4d42-b0c0-80a29c3e4be2",
         name: formData.name.trim(),
+        email: cleanedEmail,
         phone: cleanedPhone,
         date: formData.date,
         time: formData.time,
@@ -163,9 +244,11 @@ export default function ReservationForm() {
       };
 
       // 3. Save to Supabase
-      const { error } = await supabase
+      const { data: insertedReservation, error } = await supabase
         .from("reservations")
-        .insert([reservationData]);
+        .insert([reservationData])
+        .select("id")
+        .single();
 
       if (error) {
         throw error;
@@ -173,6 +256,7 @@ export default function ReservationForm() {
 
       const localReservation: ReservationData = {
         name: reservationData.name,
+        email: reservationData.email,
         phone: reservationData.phone,
         date: reservationData.date,
         time: reservationData.time,
@@ -181,7 +265,7 @@ export default function ReservationForm() {
         submittedAt,
       };
 
-      // Keep a local copy so the Thank You page can show the details even after refresh.
+      // Keep a local copy for reference if needed.
       saveReservationToLocalStorage(localReservation);
 
       // Track conversion (avoid PII in analytics payload).
@@ -191,8 +275,42 @@ export default function ReservationForm() {
         time: localReservation.time,
       });
 
-      // 4. Navigate to thank-you page (pass state for immediate display)
-      navigate("/thank-you", { state: { reservation: localReservation } });
+      // 4. Trigger confirmation emails via Edge Function
+      const { data: emailResult, error: emailError } = await supabase.functions.invoke(
+        "send-reservation-email",
+        {
+          body: {
+            reservationId: insertedReservation?.id ?? null,
+            customerEmail: reservationData.email,
+            customerName: reservationData.name,
+            customerPhone: reservationData.phone,
+            restaurantName: restaurant?.name ?? "Kalita Spectrum",
+            restaurantPhone: restaurant?.phone ?? "",
+            reservationDate: reservationData.date,
+            reservationTime: reservationData.time,
+            reservationGuests: reservationData.guests,
+          },
+        }
+      );
+
+      const emailFailed = !!emailError || !emailResult?.success;
+
+      setConfirmedReservation(localReservation);
+      setSubmitStatus('success');
+      setSubmitMessage(
+        emailFailed
+          ? "Reservation confirmed. We could not send a confirmation email at the moment. Please contact us if you need assistance."
+          : `Reservation confirmed. A confirmation email has been sent to ${reservationData.email}.`
+      );
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        date: '',
+        time: '',
+        guests: 2,
+        occasion: ''
+      });
 
     } catch (error: any) {
       console.error("Reservation error:", {
@@ -202,7 +320,9 @@ export default function ReservationForm() {
         code: error?.code,
       });
 
-      alert(error?.message || "Reservation failed");
+      setSubmitStatus('error');
+      setSubmitMessage(error?.message || "Reservation failed. Please try again.");
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -223,9 +343,15 @@ export default function ReservationForm() {
             Reserve Your Table
           </h3>
 
+          {submitStatus === 'error' && submitMessage && (
+            <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {submitMessage}
+            </div>
+          )}
+
           <div className="space-y-6">
-            {/* Name and Phone */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Name, Email, and Phone */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label htmlFor="reservation-name" className="text-sm text-gray-700 mb-1 block font-semibold">
                   Your Name *
@@ -244,6 +370,27 @@ export default function ReservationForm() {
                 />
                 {errors.name && (
                   <p id="name-error" className="text-red-500 text-xs mt-1" role="alert">{errors.name}</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="reservation-email" className="text-sm text-gray-700 mb-1 block font-semibold">
+                  Email Address *
+                </label>
+                <input
+                  id="reservation-email"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="you@example.com"
+                  aria-required="true"
+                  aria-invalid={errors.email ? 'true' : 'false'}
+                  aria-describedby={errors.email ? 'email-error' : undefined}
+                  className={`${inputBaseClasses} ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
+                />
+                {errors.email && (
+                  <p id="email-error" className="text-red-500 text-xs mt-1" role="alert">{errors.email}</p>
                 )}
               </div>
 

@@ -9,7 +9,7 @@ if (!API_KEY) {
 /**
  * Get a concierge reply based on user message
  * Currently uses simple intent detection
- * TODO: Integrate actual Gemini API when needed
+ * Placeholder implementation for concierge replies.
  */
 export async function getConciergeReply(userMessage: string): Promise<string> {
     // Simple intent detection

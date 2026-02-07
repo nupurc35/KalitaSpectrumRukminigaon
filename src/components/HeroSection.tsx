@@ -27,6 +27,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({ restaurantName }) => {
           src="https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&q=80&w=2000" 
           className="w-full h-full object-cover"
           alt={`${displayName} - Premium dining space with elegant ambiance`}
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-primary/70 via-primary/40 to-primary"></div>
       </div>

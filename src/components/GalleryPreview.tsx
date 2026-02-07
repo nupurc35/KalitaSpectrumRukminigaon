@@ -22,6 +22,7 @@ const GalleryPreview: React.FC = () => {
               alt={`Gallery image ${idx + 1}`}
               className="object-cover object-center rounded-md"
               loading="lazy"
+              decoding="async"
             />
           </div>
         ))}

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import StructuredData from './components/StructuredData';
@@ -18,12 +18,16 @@ import MenuManager from "./pages/admin/MenuManager";
 import { useRestaurant } from "./hooks/useRestaurant";
 import CategoryManager from './pages/admin/CategoryManager';
 import CreateOrder from "./pages/admin/CreateOrder";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 const AppContent: React.FC = () => {
   // Track page views on route changes
   usePageTracking();
   const location = useLocation();
   const { restaurant, loading: restaurantLoading } = useRestaurant();
+  const hasThankYouAccess = Boolean(
+    (location.state as { reservation?: unknown } | null)?.reservation
+  );
 
   useEffect(() => {
     if (restaurant?.theme_color) {
@@ -57,7 +61,10 @@ const AppContent: React.FC = () => {
             <Route path="/menu" element={<MenuPage />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
-            <Route path="/thank-you" element={<ThankYou />} />
+            <Route
+              path="/thank-you"
+              element={hasThankYouAccess ? <ThankYou /> : <Navigate to="/" replace />}
+            />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/admin/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/admin/login" element={<Login />} />
@@ -85,7 +92,9 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
   return (
     <Router>
-      <AppContent />
+      <ErrorBoundary>
+        <AppContent />
+      </ErrorBoundary>
     </Router>
   );
 };

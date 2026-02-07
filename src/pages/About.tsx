@@ -33,6 +33,7 @@ const About: React.FC = () => {
           src="https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&q=80&w=2000" 
           className="w-full h-full object-cover"
           alt="Nature Background"
+          decoding="async"
         />
         <div className="absolute inset-0 bg-primary/85 backdrop-blur-[2px]"></div>
       </div>
@@ -43,6 +44,8 @@ const About: React.FC = () => {
             src="https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=1200" 
             alt={`${name} interior`}
             className="rounded-3xl shadow-2xl relative z-10 w-full h-[500px] object-cover border border-white/10"
+            loading="lazy"
+            decoding="async"
           />
           <div className="absolute -bottom-6 -right-6 w-full h-full border-2 border-secondary rounded-3xl z-0 opacity-50"></div>
         </div>

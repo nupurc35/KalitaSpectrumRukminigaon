@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { MENU_ITEMS, WHATSAPP_LINK } from '../constants/menu';
+import { MENU_ITEMS } from '../constants/menu';
 const handleMenuClick = (item) => {
   if (item.featured) {
     window.gtag?.('event', 'menu_featured_click', {
@@ -113,6 +113,8 @@ const Menu: React.FC = () => {
                   src={item.image} 
                   alt={item.name} 
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
               <div className="flex-1 flex flex-col justify-center">

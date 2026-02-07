@@ -1,6 +1,7 @@
 import { useState} from "react";
 import { supabase } from "../../lib/superbase";
 import { useNavigate } from "react-router-dom";
+import { email as emailValidator, required, validateField } from "../../utils/validation";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -9,6 +10,19 @@ const Login = () => {
   const navigate = useNavigate();
 const handleLogin = async (e: React.FormEvent) => {
   e.preventDefault();
+
+  const emailError = validateField(email, [
+    required("Email is required"),
+    emailValidator("Please enter a valid email"),
+  ]);
+  const passwordError = validateField(password, [required("Password is required")]);
+
+  if (emailError || passwordError) {
+    setError(emailError || passwordError || "");
+    return;
+  }
+
+  setError("");
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,

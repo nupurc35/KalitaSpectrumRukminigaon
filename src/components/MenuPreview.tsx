@@ -31,6 +31,8 @@ const MenuPreview: React.FC = () => {
                   src={item.image} 
                   alt={item.name}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  loading="lazy"
+                  decoding="async"
                 />
                 {item.featured && (
                   <span className="absolute top-4 left-4 text-[9px] uppercase font-semibold tracking-[0.18em] px-3 py-1 rounded-full bg-secondary text-white">

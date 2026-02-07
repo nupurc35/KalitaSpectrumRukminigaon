@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { handlePhoneSubmit, handleReservationSubmit } from "./chat.controller";
+import { indianPhone, numberInRange, required, validateField } from "@/utils/validation";
 
 type Mode = "home" | "call" | "reserve" | "done";
 
@@ -18,20 +19,41 @@ export default function ChatConcierge() {
 
     const reservationFormRef = useRef<HTMLFormElement | null>(null);
 
-    const isPhoneValid = phoneInput.replace(/\D/g, "").length >= 10;
-    const reservationPhoneDigits = reservationPhone.replace(/\D/g, "");
-    const isReservationPhoneValid = reservationPhoneDigits.length >= 10;
-    const reservationGuestsCount = Number(reservationGuests);
-    const isReservationGuestsValid =
-        reservationGuests.trim() !== "" &&
-        !Number.isNaN(reservationGuestsCount) &&
-        reservationGuestsCount > 0;
+    const phoneError = validateField(phoneInput, [
+        required("Phone number is required"),
+        indianPhone(),
+    ]);
+    const isPhoneValid = !phoneError;
+
+    const reservationNameError = validateField(reservationName, [required("Name is required")]);
+    const reservationPhoneError = validateField(reservationPhone, [
+        required("Phone number is required"),
+        indianPhone(),
+    ]);
+    const reservationDateError = validateField(reservationDate, [
+        required("Reservation date is required"),
+    ]);
+    const reservationTimeError = validateField(reservationTime, [
+        required("Reservation time is required"),
+    ]);
+    const reservationGuestsError = validateField(
+        reservationGuests,
+        [
+            numberInRange(1, 20, {
+                messages: {
+                    min: "Number of guests must be at least 1",
+                    max: "Maximum 20 guests per reservation",
+                    invalid: "Number of guests must be at least 1",
+                },
+            }),
+        ]
+    );
     const isReservationReady =
-        reservationName.trim() !== "" &&
-        isReservationPhoneValid &&
-        reservationDate.trim() !== "" &&
-        reservationTime.trim() !== "" &&
-        isReservationGuestsValid;
+        !reservationNameError &&
+        !reservationPhoneError &&
+        !reservationDateError &&
+        !reservationTimeError &&
+        !reservationGuestsError;
 
     const timeSlots = (() => {
         const slots: string[] = [];

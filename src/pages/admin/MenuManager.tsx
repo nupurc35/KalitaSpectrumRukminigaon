@@ -5,6 +5,7 @@ import { KALITA_RESTAURANT_ID } from "@/constants/restaurent";
 import { Toaster, toast } from "react-hot-toast";
 import AdminTabs from "@/components/AdminTabs";
 import AdminPageHeader from "@/components/AdminPageHeader";
+import { numberInRange, required, validateField } from "@/utils/validation";
 
 type MenuRow = {
   id: string;
@@ -246,6 +247,46 @@ const MenuManager: React.FC = () => {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (isSubmitting) return;
+
+    const nameError = validateField(formData.name, [required("Name is required.")]);
+    if (nameError) {
+      toast.error(nameError);
+      return;
+    }
+
+    const priceError = validateField(
+      formData.price,
+      [
+        numberInRange(0, Number.MAX_SAFE_INTEGER, {
+          allowEmpty: true,
+          messages: {
+            invalid: "Price must be a number.",
+            min: "Price must be 0 or more.",
+          },
+        }),
+      ]
+    );
+    if (priceError) {
+      toast.error(priceError);
+      return;
+    }
+
+    const displayOrderError = validateField(
+      formData.display_order,
+      [
+        numberInRange(0, Number.MAX_SAFE_INTEGER, {
+          allowEmpty: true,
+          messages: {
+            invalid: "Display order must be a number.",
+            min: "Display order must be 0 or more.",
+          },
+        }),
+      ]
+    );
+    if (displayOrderError) {
+      toast.error(displayOrderError);
+      return;
+    }
 
     setIsSubmitting(true);
 

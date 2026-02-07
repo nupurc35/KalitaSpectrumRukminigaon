@@ -1,6 +1,3 @@
-// TODO: Replace MENU_DATA with backend API call.
-// Future: Fetch menu from /api/menu and hydrate state via useEffect.
-
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/superbase';

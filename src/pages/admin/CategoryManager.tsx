@@ -4,6 +4,7 @@ import { supabase } from "@/lib/superbase";
 import { Toaster, toast } from "react-hot-toast";
 import AdminTabs from "@/components/AdminTabs";
 import AdminPageHeader from "@/components/AdminPageHeader";
+import { required, validateField } from "@/utils/validation";
 
 type CategoryRow = {
   id: string;
@@ -142,8 +143,9 @@ const CategoryManager: React.FC = () => {
     if (isSubmitting) return;
 
     const trimmedName = categoryName.trim();
-    if (!trimmedName) {
-      toast.error("Category name is required.");
+    const nameError = validateField(trimmedName, [required("Category name is required.")]);
+    if (nameError) {
+      toast.error(nameError);
       return;
     }
 
@@ -186,13 +188,17 @@ const CategoryManager: React.FC = () => {
     if (isSubmitting) return;
 
     const trimmedName = subcategoryName.trim();
-    if (!trimmedName) {
-      toast.error("Subcategory name is required.");
+    const nameError = validateField(trimmedName, [required("Subcategory name is required.")]);
+    if (nameError) {
+      toast.error(nameError);
       return;
     }
 
-    if (!subcategoryCategoryId) {
-      toast.error("Please select a category.");
+    const categoryError = validateField(subcategoryCategoryId, [
+      required("Please select a category."),
+    ]);
+    if (categoryError) {
+      toast.error(categoryError);
       return;
     }
 

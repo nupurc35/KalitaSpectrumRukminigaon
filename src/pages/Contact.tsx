@@ -3,6 +3,7 @@ import { MAP_LINK, MAP_EMBED_URL } from "../constants/menu";
 import { createLead } from "../services/leadService";
 import { KALITA_RESTAURANT_ID } from "../constants/restaurent";
 import { useRestaurant } from "../hooks/useRestaurant";
+import { indianPhone, required, validateField } from "../utils/validation";
 
 const Contact: React.FC = () => {
   const { restaurant, loading: restaurantLoading } = useRestaurant();
@@ -22,8 +23,12 @@ const Contact: React.FC = () => {
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!phone.trim()) {
-      alert("Please enter your phone number");
+    const phoneError = validateField(phone, [
+      required("Please enter your phone number"),
+      indianPhone(),
+    ]);
+    if (phoneError) {
+      alert(phoneError);
       return;
     }
 
