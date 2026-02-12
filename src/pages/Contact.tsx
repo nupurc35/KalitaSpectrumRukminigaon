@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { MAP_LINK, MAP_EMBED_URL } from "../constants/menu";
 import { createLead } from "../services/leadService";
-import { KALITA_RESTAURANT_ID } from "../constants/restaurent";
 import { useRestaurant } from "../hooks/useRestaurant";
 import { indianPhone, required, validateField } from "../utils/validation";
 
@@ -12,6 +11,7 @@ const Contact: React.FC = () => {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   if (restaurantLoading) {
     return null;
@@ -19,23 +19,23 @@ const Contact: React.FC = () => {
 
   const displayPhone = restaurant?.phone ?? "";
   const phoneHref = displayPhone ? `tel:${displayPhone.replace(/\s/g, "")}` : undefined;
+  const phoneError = validateField(phone, [
+    required("Please enter your phone number"),
+    indianPhone(),
+  ]);
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const phoneError = validateField(phone, [
-      required("Please enter your phone number"),
-      indianPhone(),
-    ]);
     if (phoneError) {
-      alert(phoneError);
+      setFormError(phoneError);
       return;
     }
 
+    setFormError(null);
     setLoading(true);
 
     const { error } = await createLead({
-      restaurant_id: KALITA_RESTAURANT_ID,
       name: name.trim() || undefined,
       phone: phone.trim(),
       message: message.trim() || undefined,
@@ -46,7 +46,7 @@ const Contact: React.FC = () => {
     setLoading(false);
 
     if (error) {
-      alert("Something went wrong. Please try again.");
+      setFormError(error);
       return;
     }
 
@@ -54,7 +54,6 @@ const Contact: React.FC = () => {
     setPhone("");
     setMessage("");
     setSubmitted(true);
-    //alert("We’ll call you back shortly.");
   };
 
   return (
@@ -85,10 +84,18 @@ const Contact: React.FC = () => {
               {/* CONTACT FORM */}
               {!submitted ? (
               <form onSubmit={handleContactSubmit} className="space-y-4 pt-6">
+              {formError && (
+                <div className="rounded-lg border border-red-400/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                  {formError}
+                </div>
+              )}
               <input type="text" placeholder="Your Name (optional)"value={name}onChange={(e) => setName(e.target.value)}
                      className="w-full px-4 py-3 rounded-lg bg-white/10 text-white placeholder-white/50"/>
               <input type="tel"placeholder="Phone Number *"value={phone}onChange={(e) => setPhone(e.target.value)}required
                       className="w-full px-4 py-3 rounded-lg bg-white/10 text-white placeholder-white/50"/>
+              {phoneError && (
+                <p className="text-xs text-red-200">{phoneError}</p>
+              )}
               <textarea placeholder="Message (optional)"value={message}onChange={(e) => setMessage(e.target.value)}
                        className="w-full px-4 py-3 rounded-lg bg-white/10 text-white placeholder-white/50"/>
               <button type="submit" disabled={loading}className="w-full bg-secondary text-primary py-3 rounded-full font-bold uppercase tracking-widest hover:bg-white transition">

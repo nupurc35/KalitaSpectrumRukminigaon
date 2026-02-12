@@ -12,6 +12,7 @@ declare global {
 
 interface ImportMetaEnv {
   readonly VITE_GEMINI_API_KEY: string;
+  readonly VITE_ADMIN_EMAILS?: string;
 }
 
 interface ImportMeta {

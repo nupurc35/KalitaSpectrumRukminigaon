@@ -34,7 +34,10 @@ export interface Lead {
   intent: string;
   source: string;
   created_at: string;
-  status: 'New' | 'Contacted';
+  status: 'New' | 'Contacted' | 'Reservation Created' | 'Closed Won' | 'Closed Lost';
+  restaurant_id?: string;
+  name?: string | null;
+  reservation_id?: string | null;
 }
 
 export interface Reservation {

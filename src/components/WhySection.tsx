@@ -34,9 +34,9 @@ const WhySection: React.FC = () => {
 
         <div className="grid md:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <article 
+            <article
               key={index}
-              className="scroll-reveal opacity-100 translate-y-0 md:opacity-0 md:translate-y-10 transition-all duration-1000 ease-out bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10 hover:bg-white/10 transition-all"
+              className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10 hover:bg-white/10 transition-colors motion-safe:transition-transform motion-safe:duration-700 motion-safe:ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-secondary"
             >
               <div className="text-5xl mb-4">{feature.icon}</div>
               <h3 className="text-2xl font-serif mb-4 text-white">

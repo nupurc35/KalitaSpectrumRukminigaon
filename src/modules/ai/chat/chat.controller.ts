@@ -1,7 +1,8 @@
 // Chat controller - handles business logic for ChatConcierge
 
 import React from "react";
-import { supabase } from "../../../lib/superbase";
+import { createLead } from "@/services/leadService";
+import { createReservation } from "@/services/reservationService";
 import { BOT_MESSAGES } from "./prompts";
 import type { Message } from "./types";
 
@@ -28,17 +29,15 @@ export async function handlePhoneSubmit(
         return { success: false, error: "Invalid phone number" };
     }
 
-    // 🔹 INSERT INTO SUPABASE
-    const { error } = await supabase.from("leads").insert({
-        restaurant_id: import.meta.env.VITE_RESTAURANT_ID,
-        phone: phone,
+    const { error } = await createLead({
+        phone,
         intent: "callback",
-        source: "chat_concierge"
+        source: "chat_concierge",
     });
 
     if (error) {
-        console.error("Supabase insert failed:", error);
-        return { success: false, error: "Request failed" };
+        console.error("Lead insert failed:", error);
+        return { success: false, error };
     }
 
     return { success: true };
@@ -92,21 +91,14 @@ export async function handleReservationSubmit(
 
     try {
         // Save to Supabase
-        const { error } = await supabase.from("reservations").insert({
-            restaurant_id: import.meta.env.VITE_RESTAURANT_ID,
-            name: data.get("name"),
-            phone: data.get("phone"),
-            date: data.get("date"),
-            time: data.get("time"),
-            guests: Number(data.get("guests")),
+        await createReservation({
+            name: String(data.get("name") ?? "").trim(),
+            phone: String(data.get("phone") ?? "").trim(),
+            date: String(data.get("date") ?? ""),
+            time: String(data.get("time") ?? ""),
+            guests: Number(data.get("guests") ?? 0),
             status: "confirmed",
-            created_at: new Date().toISOString()
         });
-
-        if (error) {
-            console.error("Reservation insert failed:", error);
-            return { success: false, error: "Reservation failed" };
-        }
 
         setShowReservationForm(false);
         return { success: true };

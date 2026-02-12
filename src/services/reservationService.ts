@@ -1,3 +1,6 @@
+import { supabase } from "@/lib/superbase";
+import { restaurantId } from "@/config/env";
+
 export interface ReservationData {
   name: string;
   email?: string;
@@ -9,8 +12,18 @@ export interface ReservationData {
   submittedAt: string;
 }
 
-const RESERVATION_STORAGE_KEY = 'kalita_spectrum_reservations';
-const API_ENDPOINT = 'https://jsonplaceholder.typicode.com/posts'; // Placeholder API
+export type ReservationInsertPayload = {
+  name: string;
+  email?: string | null;
+  phone: string;
+  date: string;
+  time: string;
+  guests: number;
+  occasion?: string | null;
+  status?: "confirmed" | "pending" | "cancelled" | "completed";
+};
+
+const RESERVATION_STORAGE_KEY = "kalita_spectrum_reservations";
 
 /**
  * Save reservation to local storage
@@ -43,46 +56,69 @@ export const getReservationsFromLocalStorage = (): ReservationData[] => {
 };
 
 /**
- * Save reservation to placeholder API
- * This is a mock API call - in production, replace with actual backend endpoint
+ * Create a new reservation
+ * Orchestrated via crm-handler
  */
-export const saveReservationToAPI = async (data: ReservationData): Promise<boolean> => {
-  try {
-    const response = await fetch(API_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+export const createReservation = async (payload: ReservationInsertPayload) => {
+  const { data, error } = await supabase.functions.invoke("crm-handler", {
+    body: {
+      action: "create_reservation",
+      payload: {
+        ...payload,
+        restaurant_id: restaurantId,
       },
-      body: JSON.stringify({
-        title: `Reservation for ${data.name}`,
-        body: JSON.stringify(data),
-        userId: 1,
-      }),
-    });
+    },
+  });
 
-    if (!response.ok) {
-      throw new Error('API request failed');
+  if (error) {
+    const status = (error as any)?.context?.status;
+    if (status === 429) {
+      throw new Error("Too many requests. Please wait a minute and try again.");
     }
-
-    return true;
-  } catch (error) {
-    console.error('Failed to save reservation to API:', error);
-    return false;
+    throw new Error(error.message);
   }
+
+  if (data?.success === false) {
+    throw new Error(data.error ?? "Reservation failed.");
+  }
+
+  if (!data?.data?.id) {
+    throw new Error("Reservation failed.");
+  }
+
+  return { id: data.data.id };
 };
 
 /**
- * Save reservation (tries API first, falls back to local storage)
+ * Update reservation status
+ * Orchestrated via crm-handler (cascades to related lead if exists)
  */
-export const saveReservation = async (data: ReservationData): Promise<void> => {
-  // Always save to local storage as backup
-  saveReservationToLocalStorage(data);
+export const updateReservationStatus = async (
+  reservationId: string,
+  status: "confirmed" | "completed" | "cancelled"
+) => {
+  const { data, error } = await supabase.functions.invoke("crm-handler", {
+    body: {
+      action: "update_reservation_status",
+      payload: {
+        reservation_id: reservationId,
+        restaurant_id: restaurantId,
+        status,
+      },
+    },
+  });
 
-  // Try to save to API (non-blocking)
-  try {
-    await saveReservationToAPI(data);
-  } catch (error) {
-    // API save failed, but local storage save succeeded
-    console.warn('API save failed, reservation saved to local storage only');
+  if (error) {
+    const status = (error as any)?.context?.status;
+    if (status === 429) {
+      throw new Error("Too many requests. Please wait a minute and try again.");
+    }
+    throw new Error(error.message);
   }
+
+  if (data?.success === false) {
+    throw new Error(data.error ?? "Failed to update reservation.");
+  }
+
+  return { reservation: data?.data?.reservation };
 };

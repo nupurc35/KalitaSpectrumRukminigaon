@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import AdminHeader from "./adminNavbar";
 import { supabase } from "@/lib/superbase";
-import { KALITA_RESTAURANT_ID } from "@/constants/restaurent";
+import { restaurantId } from "@/config/env";
 import { Toaster, toast } from "react-hot-toast";
 import AdminPageHeader from "@/components/AdminPageHeader";
 import ProtectedRoute from "@/components/protectedRoute";
@@ -19,7 +19,7 @@ type OrderItem = {
   quantity: number;
 };
 
-const CURRENT_RESTAURANT_ID = KALITA_RESTAURANT_ID;
+const CURRENT_RESTAURANT_ID = restaurantId;
 
 const CreateOrderContent: React.FC = () => {
   const [menuItems, setMenuItems] = useState<MenuItemRow[]>([]);
@@ -169,7 +169,8 @@ const CreateOrderContent: React.FC = () => {
     const { error: totalError } = await supabase
       .from("orders")
       .update({ total_amount: totalAmount })
-      .eq("id", orderData.id);
+      .eq("id", orderData.id)
+      .eq("restaurant_id", CURRENT_RESTAURANT_ID);
 
     if (totalError) {
       console.error("Failed to update order total:", totalError);

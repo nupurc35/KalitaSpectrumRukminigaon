@@ -166,7 +166,9 @@ const CategoryManager: React.FC = () => {
 
       toast.success("Category updated.");
     } else {
-      const { error } = await supabase.from("categories").insert([{ name: trimmedName }]);
+      const { error } = await supabase
+        .from("categories")
+        .insert([{ name: trimmedName }]);
 
       if (error) {
         console.error(error);
@@ -257,7 +259,10 @@ const CategoryManager: React.FC = () => {
     setIsDeleting(true);
 
     const tableName = deleteTarget.type === "category" ? "categories" : "subcategories";
-    const { error } = await supabase.from(tableName).delete().eq("id", deleteTarget.id);
+    const { error } = await supabase
+      .from(tableName)
+      .delete()
+      .eq("id", deleteTarget.id);
 
     if (error) {
       console.error(error);

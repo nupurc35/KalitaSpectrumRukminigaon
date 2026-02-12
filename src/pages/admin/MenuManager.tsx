@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import AdminHeader from "./adminNavbar";
 import { supabase } from "@/lib/superbase";
-import { KALITA_RESTAURANT_ID } from "@/constants/restaurent";
+import { restaurantId } from "@/config/env";
 import { Toaster, toast } from "react-hot-toast";
 import AdminTabs from "@/components/AdminTabs";
 import AdminPageHeader from "@/components/AdminPageHeader";
@@ -52,7 +52,7 @@ const emptyFormData: MenuFormData = {
   display_order: "",
 };
 
-const CURRENT_RESTAURANT_ID = KALITA_RESTAURANT_ID;
+const CURRENT_RESTAURANT_ID = restaurantId;
 
 const MenuManager: React.FC = () => {
   const [menuItems, setMenuItems] = useState<MenuRow[]>([]);
@@ -99,8 +99,14 @@ const MenuManager: React.FC = () => {
   const loadLookups = async () => {
     const [{ data: categoryData, error: categoryError }, { data: subcategoryData, error: subcategoryError }] =
       await Promise.all([
-        supabase.from("categories").select("id,name").order("name", { ascending: true }),
-        supabase.from("subcategories").select("id,name").order("name", { ascending: true }),
+        supabase
+          .from("categories")
+          .select("id,name")
+          .order("name", { ascending: true }),
+        supabase
+          .from("subcategories")
+          .select("id,name")
+          .order("name", { ascending: true }),
       ]);
 
     if (categoryError) {

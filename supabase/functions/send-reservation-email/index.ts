@@ -64,43 +64,51 @@ const sendEmail = async (payload: {
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
-  if (req.method !== "POST") {
-    return jsonResponse({ success: false, error: "Method not allowed" }, 405);
-  }
-
-  if (!RESEND_ADMIN_EMAIL) {
-    return jsonResponse({ success: false, error: "Missing RESEND_ADMIN_EMAIL" }, 500);
-  }
-
-  let payload: ReservationEmailPayload | null = null;
   try {
-    payload = (await req.json()) as ReservationEmailPayload;
-  } catch {
-    return jsonResponse({ success: false, error: "Invalid JSON payload" }, 400);
-  }
+    // Handle OPTIONS preflight immediately, before any JSON parsing
+    if (req.method === "OPTIONS") {
+      return new Response("ok", { headers: corsHeaders });
+    }
 
-  if (
-    !payload ||
-    !payload.customerEmail ||
-    !payload.customerName ||
-    !payload.customerPhone ||
-    !payload.restaurantName ||
-    !payload.reservationDate ||
-    !payload.reservationTime ||
-    !payload.reservationGuests
-  ) {
-    return jsonResponse({ success: false, error: "Missing required fields" }, 400);
-  }
+    // Only allow POST requests
+    if (req.method !== "POST") {
+      return jsonResponse({ success: false, error: "Method not allowed" }, 405);
+    }
 
-  if (!isEmail(payload.customerEmail)) {
-    return jsonResponse({ success: false, error: "Invalid customer email" }, 400);
-  }
+    // Validate environment
+    if (!RESEND_ADMIN_EMAIL) {
+      return jsonResponse({ success: false, error: "Missing RESEND_ADMIN_EMAIL" }, 500);
+    }
 
-  const reservationDetails = `
+    // Parse JSON payload
+    let payload: ReservationEmailPayload | null = null;
+    try {
+      payload = (await req.json()) as ReservationEmailPayload;
+    } catch {
+      return jsonResponse({ success: false, error: "Invalid JSON payload" }, 400);
+    }
+
+    // Validate required fields
+    if (
+      !payload ||
+      !payload.customerEmail ||
+      !payload.customerName ||
+      !payload.customerPhone ||
+      !payload.restaurantName ||
+      !payload.reservationDate ||
+      !payload.reservationTime ||
+      !payload.reservationGuests
+    ) {
+      return jsonResponse({ success: false, error: "Missing required fields" }, 400);
+    }
+
+    // Validate email format
+    if (!isEmail(payload.customerEmail)) {
+      return jsonResponse({ success: false, error: "Invalid customer email" }, 400);
+    }
+
+    // Build reservation details
+    const reservationDetails = `
 Reservation ID: ${payload.reservationId ?? "N/A"}
 Name: ${payload.customerName}
 Email: ${payload.customerEmail}
@@ -110,8 +118,9 @@ Time: ${payload.reservationTime}
 Guests: ${payload.reservationGuests}
 `.trim();
 
-  const customerSubject = `Your reservation is confirmed at ${payload.restaurantName}`;
-  const customerHtml = `
+    // Build customer email
+    const customerSubject = `Your reservation is confirmed at ${payload.restaurantName}`;
+    const customerHtml = `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111827;">
       <h2 style="margin: 0 0 12px;">Reservation Confirmed</h2>
       <p>Hello ${payload.customerName},</p>
@@ -125,10 +134,11 @@ Guests: ${payload.reservationGuests}
       <p>We look forward to serving you.</p>
     </div>
   `;
-  const customerText = `Reservation Confirmed\n\n${payload.customerName}, your table is confirmed at ${payload.restaurantName}.\nDate: ${payload.reservationDate}\nTime: ${payload.reservationTime}\nGuests: ${payload.reservationGuests}\nContact: ${payload.restaurantPhone ?? "N/A"}`;
+    const customerText = `Reservation Confirmed\n\n${payload.customerName}, your table is confirmed at ${payload.restaurantName}.\nDate: ${payload.reservationDate}\nTime: ${payload.reservationTime}\nGuests: ${payload.reservationGuests}\nContact: ${payload.restaurantPhone ?? "N/A"}`;
 
-  const adminSubject = `New reservation: ${payload.customerName} (${payload.reservationDate} ${payload.reservationTime})`;
-  const adminHtml = `
+    // Build admin email
+    const adminSubject = `New reservation: ${payload.customerName} (${payload.reservationDate} ${payload.reservationTime})`;
+    const adminHtml = `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111827;">
       <h2 style="margin: 0 0 12px;">New Reservation</h2>
       <div style="background:#f9fafb; padding:16px; border-radius:12px; margin:16px 0;">
@@ -142,9 +152,9 @@ Guests: ${payload.reservationGuests}
       </div>
     </div>
   `;
-  const adminText = `New Reservation\n\n${reservationDetails}`;
+    const adminText = `New Reservation\n\n${reservationDetails}`;
 
-  try {
+    // Send emails
     await Promise.all([
       sendEmail({
         to: payload.customerEmail,
@@ -159,10 +169,16 @@ Guests: ${payload.reservationGuests}
         text: adminText,
       }),
     ]);
-  } catch (error) {
-    console.error("Resend email error:", error);
-    return jsonResponse({ success: false, error: "Email send failed" }, 502);
-  }
 
-  return jsonResponse({ success: true });
+    return jsonResponse({ success: true });
+  } catch (error) {
+    console.error("Reservation email handler error:", error);
+    return jsonResponse(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Internal server error",
+      },
+      500
+    );
+  }
 });

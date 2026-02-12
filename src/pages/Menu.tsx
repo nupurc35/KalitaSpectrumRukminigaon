@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/superbase';
+import { restaurantId } from '@/config/env';
 import { useRestaurant } from '../hooks/useRestaurant';
 
 type MenuItemData = {
@@ -67,6 +68,8 @@ const getFilledItems = (
   return rankItems(baseItems);
 };
 
+const MENU_PAGE_SIZE = 200;
+
 const MenuPage: React.FC = () => {
   const { restaurant, loading: restaurantLoading } = useRestaurant();
   const [menuData, setMenuData] = useState<MenuCategory[]>([]);
@@ -93,6 +96,8 @@ const MenuPage: React.FC = () => {
           categories ( id, name ),
           subcategories ( id, name )
         `)
+        .eq("restaurant_id", restaurantId)
+        .range(0, MENU_PAGE_SIZE - 1)
         .order('display_order', { ascending: true });
 
       if (error) {

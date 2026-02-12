@@ -1,5 +1,6 @@
 import { useState} from "react";
 import { supabase } from "../../lib/superbase";
+import { isAdminUser } from "@/utils/auth";
 import { useNavigate } from "react-router-dom";
 import { email as emailValidator, required, validateField } from "../../utils/validation";
 
@@ -31,6 +32,13 @@ const handleLogin = async (e: React.FormEvent) => {
 
   if (error) {
     setError(error.message);
+    return;
+  }
+
+  const user = data?.user ?? data?.session?.user;
+  if (!isAdminUser(user)) {
+    await supabase.auth.signOut();
+    setError("Your account does not have admin access.");
     return;
   }
 

@@ -8,6 +8,7 @@ export default function ChatConcierge() {
     const [open, setOpen] = useState(false);
     const [mode, setMode] = useState<Mode>("home");
     const [doneMessage, setDoneMessage] = useState("");
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const [phoneInput, setPhoneInput] = useState("");
     const [reservationName, setReservationName] = useState("");
@@ -81,6 +82,7 @@ export default function ChatConcierge() {
     const resetChat = () => {
         setMode("home");
         setDoneMessage("");
+        setErrorMessage(null);
         setPhoneInput("");
         setReservationName("");
         setReservationPhone("");
@@ -92,6 +94,7 @@ export default function ChatConcierge() {
 
     const onCallClick = () => {
         setPhoneInput("");
+        setErrorMessage(null);
         setMode("call");
     };
 
@@ -102,6 +105,7 @@ export default function ChatConcierge() {
         setReservationTime("");
         setReservationGuests("");
         setIsReservationSubmitHover(false);
+        setErrorMessage(null);
         setMode("reserve");
     };
 
@@ -113,9 +117,10 @@ export default function ChatConcierge() {
         if (result.success) {
             setPhoneInput("");
             setDoneMessage("Request Sent Successfully. Our team will call you back shortly.");
+            setErrorMessage(null);
             setMode("done");
         } else {
-            alert(result.error || "Request failed");
+            setErrorMessage(result.error || "Request failed");
         }
     };
 
@@ -135,9 +140,10 @@ export default function ChatConcierge() {
 
         if (result.success) {
             setDoneMessage("Your table is confirmed! 🎉 We look forward to serving you 🙏");
+            setErrorMessage(null);
             setMode("done");
         } else {
-            alert(result.error || "Reservation failed");
+            setErrorMessage(result.error || "Reservation failed");
         }
     };
 
@@ -266,6 +272,22 @@ export default function ChatConcierge() {
                             paddingRight: 4
                         }}
                     >
+                        {errorMessage && (
+                            <div
+                                style={{
+                                    marginBottom: 8,
+                                    padding: 10,
+                                    borderRadius: 8,
+                                    backgroundColor: "rgba(239, 68, 68, 0.12)",
+                                    border: "1px solid rgba(239, 68, 68, 0.45)",
+                                    color: "#fecaca",
+                                    fontSize: 12,
+                                    fontWeight: 600
+                                }}
+                            >
+                                {errorMessage}
+                            </div>
+                        )}
                         {mode === "home" && (
                             <div style={{ display: "grid", gap: 8 }}>
                                 <button onClick={onCallClick}>📞 Call me back</button>

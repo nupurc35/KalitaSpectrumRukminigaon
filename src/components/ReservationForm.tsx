@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ChangeEvent } from 'react';
-import { saveReservationToLocalStorage, type ReservationData } from '../services/reservationService';
+import { createReservation, saveReservationToLocalStorage, type ReservationData } from '../services/reservationService';
 import { validateIndianPhoneNumber } from '../utils/phoneValidation';
 import {
   email as emailValidator,
@@ -231,7 +231,6 @@ export default function ReservationForm() {
 
       // 2. Prepare reservation payload
       const reservationData = {
-        restaurant_id: import.meta.env.VITE_RESTAURANT_ID || "63bfceb5-1fad-4d42-b0c0-80a29c3e4be2",
         name: formData.name.trim(),
         email: cleanedEmail,
         phone: cleanedPhone,
@@ -240,19 +239,10 @@ export default function ReservationForm() {
         guests: Number(formData.guests),
         occasion: formData.occasion?.trim() || null,
         status: "confirmed",
-        created_at: submittedAt,
       };
 
-      // 3. Save to Supabase
-      const { data: insertedReservation, error } = await supabase
-        .from("reservations")
-        .insert([reservationData])
-        .select("id")
-        .single();
-
-      if (error) {
-        throw error;
-      }
+      // 3. Save to Supabase via Edge Function (rate-limited)
+      const insertedReservation = await createReservation(reservationData);
 
       const localReservation: ReservationData = {
         name: reservationData.name,

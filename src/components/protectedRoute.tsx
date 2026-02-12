@@ -1,6 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/superbase";
+import { isAdminUser } from "@/utils/auth";
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const [loading, setLoading] = useState(true);
@@ -9,7 +10,7 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
-      setAllowed(!!data.session);
+      setAllowed(isAdminUser(data.session?.user));
       setLoading(false);
     };
 

@@ -19,12 +19,14 @@ import { useRestaurant } from "./hooks/useRestaurant";
 import CategoryManager from './pages/admin/CategoryManager';
 import CreateOrder from "./pages/admin/CreateOrder";
 import ErrorBoundary from "./components/ErrorBoundary";
+import Leadspage from "./pages/admin/LeadsPage"; 
+import ReservationsPage from "./pages/admin/ReservationsPage";
 
 const AppContent: React.FC = () => {
   // Track page views on route changes
   usePageTracking();
   const location = useLocation();
-  const { restaurant, loading: restaurantLoading } = useRestaurant();
+  const { restaurant, loading: restaurantLoading, error: restaurantError } = useRestaurant();
   const hasThankYouAccess = Boolean(
     (location.state as { reservation?: unknown } | null)?.reservation
   );
@@ -36,11 +38,7 @@ const AppContent: React.FC = () => {
   }, [restaurant?.theme_color]);
 
   if (restaurantLoading) {
-    return (
-      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
-        <span className="text-lg font-semibold tracking-wide text-white/80">Loading...</span>
-      </div>
-    );
+    return null; // Let page components handle their own loading states
   }
 
   return (
@@ -78,6 +76,9 @@ const AppContent: React.FC = () => {
             />
             <Route path="/admin/categories" element={<ProtectedRoute><CategoryManager /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            
+            <Route path="/admin/leads" element={<ProtectedRoute><Leadspage/></ProtectedRoute>} />
+            <Route path="/admin/reservations" element={<ProtectedRoute><ReservationsPage /></ProtectedRoute>} />
             <Route path="/admin/create-order" element={<ProtectedRoute><CreateOrder /></ProtectedRoute>} />
           </Routes>
         </main>

@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/superbase";
+import { restaurantId } from "@/config/env";
 
 export type Restaurant = {
   id: string;
   name: string | null;
-  phone: string | null;
   address: string | null;
-  theme_color: string | null;
 };
 
 let cachedRestaurant: Restaurant | null = null;
@@ -21,7 +20,8 @@ const fetchRestaurant = async () => {
   inFlight = (async () => {
     const { data, error } = await supabase
       .from("restaurants")
-      .select("id,name,phone,address,theme_color")
+      .select("id,name,address")
+      .eq("id", restaurantId)
       .limit(1);
 
     if (error) {
@@ -44,6 +44,7 @@ const fetchRestaurant = async () => {
 export const useRestaurant = () => {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(cachedRestaurant);
   const [loading, setLoading] = useState(!hasLoaded);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -51,6 +52,7 @@ export const useRestaurant = () => {
     if (hasLoaded) {
       setRestaurant(cachedRestaurant);
       setLoading(false);
+      setError(null);
       return () => {
         isMounted = false;
       };
@@ -59,6 +61,11 @@ export const useRestaurant = () => {
     fetchRestaurant()
       .then((result) => {
         if (isMounted) {
+          if (result === null) {
+            setError("Failed to load restaurant data. Please try again.");
+          } else {
+            setError(null);
+          }
           setRestaurant(result);
           setLoading(false);
         }
@@ -67,6 +74,7 @@ export const useRestaurant = () => {
         console.error("Failed to fetch restaurant:", err);
         if (isMounted) {
           setRestaurant(null);
+          setError("Unable to connect to the server. Please check your internet connection.");
           setLoading(false);
         }
       });
@@ -76,5 +84,5 @@ export const useRestaurant = () => {
     };
   }, []);
 
-  return { restaurant, loading };
+  return { restaurant, loading, error };
 };

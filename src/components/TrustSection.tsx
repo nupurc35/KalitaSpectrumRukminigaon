@@ -8,10 +8,10 @@ const TrustSection: React.FC = () => {
         <div className="inline-flex items-center space-x-3 bg-white/80 backdrop-blur-md px-6 py-3 rounded-full border border-primary/10 shadow-lg">
           <span className="text-secondary text-2xl">★</span>
           <div className="text-left">
-            <p className="text-primary font-bold text-lg">
+            <p className="text-slate-900 font-bold text-lg">
               {GOOGLE_RATING} Google Rating
             </p>
-            <p className="text-primary/60 text-sm">
+            <p className="text-slate-700 text-sm">
               Based on {REVIEW_COUNT}+ verified reviews
             </p>
           </div>
@@ -19,7 +19,7 @@ const TrustSection: React.FC = () => {
             href={GOOGLE_REVIEW_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="ml-4 text-primary/80 hover:text-primary text-sm font-medium underline"
+            className="ml-4 text-slate-900/80 hover:text-primary text-sm font-medium underline"
           >
             Read Reviews
           </a>
