@@ -5,11 +5,16 @@ module.exports = {
   theme: {
   	extend: {
   		borderRadius: {
-  			lg: 'var(--radius)',
-  			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			lg: '12px',
+  			md: '10px',
+  			sm: '8px'
   		},
   		colors: {
+        crm: {
+          background: '#0a0a0a',
+          card: '#171717',
+          border: 'rgba(255, 255, 255, 0.1)',
+        },
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

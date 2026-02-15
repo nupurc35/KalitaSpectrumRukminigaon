@@ -29,12 +29,14 @@ export async function getTodayMetrics(): Promise<TodayMetrics> {
     .gte("created_at", todayStartISO);
 
   // 2. Contacted Today
-  const { count: contactedToday = 0 } = await supabase
+    // In todayMetricsService.ts, replace the "Contacted Today" query:
+
+// 2. Contacted Today (any lead that was contacted today, regardless of current status)
+    const { count: contactedToday = 0 } = await supabase
     .from("leads")
     .select("id", { count: "exact", head: true })
     .eq("restaurant_id", restaurantId)
-    .eq("status", "Contacted")
-    .gte("last_contacted_at", todayStartISO)
+    .gte("last_contacted_at", todayStartISO);
 
   // 3. Reservations Created Today
   const { count: reservationsCreated = 0 } = await supabase

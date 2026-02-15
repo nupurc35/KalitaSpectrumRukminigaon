@@ -16,11 +16,15 @@ import Login from "./pages/admin/Login";
 import ProtectedRoute from "./components/protectedRoute";
 import MenuManager from "./pages/admin/MenuManager";
 import { useRestaurant } from "./hooks/useRestaurant";
-import CategoryManager from './pages/admin/CategoryManager';
 import CreateOrder from "./pages/admin/CreateOrder";
 import ErrorBoundary from "./components/ErrorBoundary";
-import Leadspage from "./pages/admin/LeadsPage"; 
+import Leadspage from "./pages/admin/LeadsPage";
 import ReservationsPage from "./pages/admin/ReservationsPage";
+import CRMDashboard from "./pages/admin/CRMDashboard";
+import CRMLeads from "./pages/admin/CRMLeads";
+import CRMReservations from "@/pages/admin/CRMReservations";
+import OrdersPage from "./pages/admin/OrdersPage";
+import CategoryManager from "./pages/admin/CategoryManager";
 
 const AppContent: React.FC = () => {
   // Track page views on route changes
@@ -64,22 +68,24 @@ const AppContent: React.FC = () => {
               element={hasThankYouAccess ? <ThankYou /> : <Navigate to="/" replace />}
             />
             <Route path="/gallery" element={<Gallery />} />
-            <Route path="/admin/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+
+            {/* Public Admin Routes */}
             <Route path="/admin/login" element={<Login />} />
-            <Route
-              path="/admin/menu"
-              element={
-                <ProtectedRoute>
-                  <MenuManager />
-                </ProtectedRoute>
-              }
-            />
+
+            {/* Protected CRM Admin Routes */}
+            <Route path="/admin" element={<Navigate to="/admin/crm" replace />} />
+
+            <Route path="/admin/crm" element={<ProtectedRoute><CRMDashboard /></ProtectedRoute>} />
+            <Route path="/admin/crm/leads" element={<ProtectedRoute><CRMLeads /></ProtectedRoute>} />
+            <Route path="/admin/crm/reservations" element={<ProtectedRoute><CRMReservations /></ProtectedRoute>} />
+
+            <Route path="/admin/menu" element={<ProtectedRoute><MenuManager /></ProtectedRoute>} />
             <Route path="/admin/categories" element={<ProtectedRoute><CategoryManager /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            
-            <Route path="/admin/leads" element={<ProtectedRoute><Leadspage/></ProtectedRoute>} />
-            <Route path="/admin/reservations" element={<ProtectedRoute><ReservationsPage /></ProtectedRoute>} />
             <Route path="/admin/create-order" element={<ProtectedRoute><CreateOrder /></ProtectedRoute>} />
+            <Route path="/admin/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+
+            {/* Legacy Admin Routes (Redirect or Keep for compatibility if needed) */}
+            <Route path="/admin/dashboard" element={<Navigate to="/admin/crm" replace />} />
           </Routes>
         </main>
 

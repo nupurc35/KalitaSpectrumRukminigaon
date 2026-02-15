@@ -1,0 +1,207 @@
+import React, { useEffect, useState } from "react";
+import { supabase } from "@/lib/superbase";
+import { Layout } from "@/components/crm/Layout";
+import { Card, CardContent, CardHeader } from "@/components/crm/Card";
+import { AlertCircle, CheckCircle, Database } from "lucide-react";
+
+/**
+ * DEBUG VERSION - CategoryManager
+ * This version shows detailed error information to help diagnose the issue
+ */
+
+export default function CategoryManagerDebug() {
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [errorDetails, setErrorDetails] = useState<any>(null);
+  const [connectionStatus, setConnectionStatus] = useState<string>("checking");
+
+  useEffect(() => {
+    async function diagnose() {
+      setLoading(true);
+      setConnectionStatus("checking");
+
+      try {
+        // Step 1: Check Supabase connection
+        const { data: healthCheck, error: healthError } = await supabase
+          .from("categories")
+          .select("count", { count: "exact", head: true });
+
+        if (healthError) {
+          setConnectionStatus("error");
+          setErrorDetails({
+            step: "Connection Check",
+            error: healthError,
+            message: healthError.message,
+            details: healthError.details,
+            hint: healthError.hint,
+            code: healthError.code,
+          });
+          setLoading(false);
+          return;
+        }
+
+        setConnectionStatus("connected");
+
+        // Step 2: Try to fetch categories
+        const { data, error, count } = await supabase
+          .from("categories")
+          .select("*", { count: "exact" })
+          .order("name", { ascending: true });
+
+        if (error) {
+          setErrorDetails({
+            step: "Fetching Categories",
+            error: error,
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code,
+          });
+        } else {
+          setCategories(data || []);
+          setErrorDetails({
+            step: "Success",
+            count: count,
+            dataLength: data?.length || 0,
+            sampleData: data?.[0] || null,
+          });
+        }
+      } catch (err: any) {
+        setErrorDetails({
+          step: "Unexpected Error",
+          error: err,
+          message: err.message || String(err),
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    diagnose();
+  }, []);
+
+  return (
+    <Layout title="Category Manager - Debug Mode">
+      <div className="space-y-6">
+        {/* Connection Status */}
+        <Card className="border-l-4 border-l-blue-500">
+          <CardHeader>
+            <h3 className="font-semibold flex items-center gap-2">
+              <Database size={18} />
+              Database Connection Status
+            </h3>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-3">
+              {connectionStatus === "checking" && (
+                <>
+                  <div className="w-3 h-3 rounded-full bg-yellow-500 animate-pulse" />
+                  <span className="text-yellow-500">Checking connection...</span>
+                </>
+              )}
+              {connectionStatus === "connected" && (
+                <>
+                  <CheckCircle size={20} className="text-emerald-500" />
+                  <span className="text-emerald-500 font-medium">Connected to Supabase</span>
+                </>
+              )}
+              {connectionStatus === "error" && (
+                <>
+                  <AlertCircle size={20} className="text-red-500" />
+                  <span className="text-red-500 font-medium">Connection Error</span>
+                </>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Error Details */}
+        {errorDetails && (
+          <Card className={errorDetails.step === "Success" ? "border-l-4 border-l-emerald-500" : "border-l-4 border-l-red-500"}>
+            <CardHeader>
+              <h3 className="font-semibold flex items-center gap-2">
+                {errorDetails.step === "Success" ? (
+                  <CheckCircle size={18} className="text-emerald-500" />
+                ) : (
+                  <AlertCircle size={18} className="text-red-500" />
+                )}
+                {errorDetails.step}
+              </h3>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <pre className="bg-black/30 p-4 rounded-lg text-xs overflow-x-auto">
+                  {JSON.stringify(errorDetails, null, 2)}
+                </pre>
+
+                {errorDetails.code && (
+                  <div className="space-y-2">
+                    <p className="text-sm"><strong>Error Code:</strong> {errorDetails.code}</p>
+                    <p className="text-sm"><strong>Message:</strong> {errorDetails.message}</p>
+                    {errorDetails.hint && <p className="text-sm"><strong>Hint:</strong> {errorDetails.hint}</p>}
+                    {errorDetails.details && <p className="text-sm"><strong>Details:</strong> {errorDetails.details}</p>}
+                  </div>
+                )}
+
+                {errorDetails.step === "Success" && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-emerald-500">
+                      <strong>✓ Total Categories:</strong> {errorDetails.count}
+                    </p>
+                    <p className="text-sm text-emerald-500">
+                      <strong>✓ Data Fetched:</strong> {errorDetails.dataLength} records
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Categories Data */}
+        {!loading && categories.length > 0 && (
+          <Card>
+            <CardHeader>
+              <h3 className="font-semibold">Categories Found ({categories.length})</h3>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {categories.map((cat, idx) => (
+                  <div key={idx} className="p-3 bg-white/5 rounded-lg">
+                    <pre className="text-xs">{JSON.stringify(cat, null, 2)}</pre>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Common Solutions */}
+        <Card className="border-l-4 border-l-amber-500">
+          <CardHeader>
+            <h3 className="font-semibold">Common Solutions</h3>
+          </CardHeader>
+          <CardContent>
+            <ol className="list-decimal list-inside space-y-2 text-sm text-white/70">
+              <li>
+                <strong>Table doesn't exist:</strong> Create the categories table in Supabase
+              </li>
+              <li>
+                <strong>RLS Policy blocking:</strong> Check Row Level Security policies in Supabase
+              </li>
+              <li>
+                <strong>Missing columns:</strong> Ensure table has 'id' and 'name' columns
+              </li>
+              <li>
+                <strong>Authentication issue:</strong> Make sure you're logged in
+              </li>
+              <li>
+                <strong>Wrong Supabase URL/Key:</strong> Check your .env configuration
+              </li>
+            </ol>
+          </CardContent>
+        </Card>
+      </div>
+    </Layout>
+  );
+}

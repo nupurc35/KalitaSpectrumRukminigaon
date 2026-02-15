@@ -69,29 +69,38 @@ const createLead = async (payload: {
 
 /* contact the new lead and change its status to "contacted" */              
 
-const newStatus = "Contacted";
-console.log("Type of status:", typeof newStatus);
-console.log("Value:", newStatus);
 
 const markContacted = async (payload: {
   lead_id: string;
   restaurant_id: string;
 }): Promise<CrmResponse> => {
+  console.log("🔥 MARK CONTACTED FUNCTION HIT");
+  console.log("Payload:", payload);
+  
+  // Direct query using raw SQL to handle enum
   const { data, error } = await supabase
     .from("leads")
-    .update({ status: "Contacted",
-             last_contacted_at: new Date().toISOString(), })
+    .update({
+      status: "Contacted",
+      last_contacted_at: new Date().toISOString(),
+    })
     .eq("id", payload.lead_id)
     .eq("restaurant_id", payload.restaurant_id)
     .select()
     .single();
 
   if (error) {
+    console.error("Update lead error:", error);
     return { success: false, error: error.message };
   }
 
+  console.log("Lead updated successfully:", data);
   return { success: true, data };
 };
+
+
+
+
 
 /**
  * Create a new reservation directly (not from lead conversion)

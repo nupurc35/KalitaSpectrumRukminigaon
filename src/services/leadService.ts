@@ -46,8 +46,36 @@ export const markContacted = async (leadId: string) => {
     },
   });
 
-  if (error) throw new Error(error.message);
-  if (data?.success === false) throw new Error(data.error);
+  // ✅ Better error handling - log the full response to see what's happening
+  if (error) {
+    console.error("Edge Function Error Details:", {
+      message: error.message,
+      context: (error as any)?.context,
+      status: (error as any)?.context?.status,
+      fullError: error
+    });
+    
+    const status = (error as any)?.context?.status;
+    if (status === 429) {
+      throw new Error("Too many requests. Please wait a minute and try again.");
+    }
+    
+    // ✅ Check if there's error data in the response body
+    const errorData = (error as any)?.context?.body;
+    if (errorData) {
+      console.error("Error response body:", errorData);
+      throw new Error(errorData.error || error.message);
+    }
+    
+    throw new Error(error.message);
+  }
+
+  // ✅ Log the successful response to see what we're getting
+  console.log("markContacted response:", data);
+
+  if (data?.success === false) {
+    throw new Error(data.error ?? "Failed to mark lead as contacted.");
+  }
 
   return null;
 };
@@ -141,5 +169,3 @@ export const getLeads = async (
 
   return data ?? [];
 };
-
-

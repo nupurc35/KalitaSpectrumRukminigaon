@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { fetchLeads, updateLeadStatus, deleteLead, convertLeadToReservation, closeLeadAsLost } from "../../services/adminService";
 import AdminHeader from "./adminNavbar";
 import { Lead } from "../../types";
+import { markContacted } from "@/services/leadService";
+
 
 const LeadsPage: React.FC = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -59,17 +61,19 @@ const LeadsPage: React.FC = () => {
     }
   };
 
+
   const handleStatusUpdate = async (id: string) => {
     try {
-      const { error } = await updateLeadStatus(id, "Contacted");
-      if (error) throw error;
+      await markContacted(id);  // ✅ Just await it - it throws on error
 
       // Refetch to ensure data consistency
       await loadLeads(0);
       setPage(0);
+
     } catch (err) {
-      console.error("Failed to update status", err);
-      alert("Failed to update status. Please try again.");
+      console.error("Failed to update status:", err);
+      const message = err instanceof Error ? err.message : "Failed to update status. Please try again.";
+      alert(message);  // Shows user-friendly error message
     }
   };
 
@@ -103,7 +107,7 @@ const LeadsPage: React.FC = () => {
 
   const getStatusBadgeStyles = (status: string) => {
     switch (status) {
-      case "contacted":
+      case "Contacted":
         return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
       case "Reservation Created":
         return "bg-blue-500/10 text-blue-400 border-blue-500/20";
@@ -147,11 +151,10 @@ const LeadsPage: React.FC = () => {
               </thead>
               <tbody>
                 {leads.map((lead) => (
-                  <tr 
-                    key={lead.id} 
-                    className={`border-b border-white/5 hover:bg-white/[0.02] transition-colors group ${
-                      isLeadClosed(lead.status) ? "opacity-60" : ""
-                    }`}
+                  <tr
+                    key={lead.id}
+                    className={`border-b border-white/5 hover:bg-white/[0.02] transition-colors group ${isLeadClosed(lead.status) ? "opacity-60" : ""
+                      }`}
                   >
                     <td className="py-4 px-6 font-mono text-sm text-white/80">{lead.phone}</td>
                     <td className="py-4 px-6 text-sm text-white/80">{lead.intent}</td>

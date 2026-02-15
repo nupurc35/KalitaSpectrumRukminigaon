@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
-import AdminHeader from "./adminNavbar";
 import { supabase } from "@/lib/superbase";
 import { Toaster, toast } from "react-hot-toast";
-import AdminTabs from "@/components/AdminTabs";
-import AdminPageHeader from "@/components/AdminPageHeader";
 import { required, validateField } from "@/utils/validation";
+import { Layout } from "@/components/crm/Layout";
+import { Card } from "@/components/crm/Card";
+import { Plus, Edit2, Trash2, X } from "lucide-react";
 
 type CategoryRow = {
   id: string;
@@ -66,7 +66,7 @@ const CategoryManager: React.FC = () => {
       return;
     }
 
-    setSubcategories((data ?? []) as SubcategoryRow[]);
+    setSubcategories((data ?? []) as unknown as SubcategoryRow[]);
   };
 
   const refreshData = async () => {
@@ -196,11 +196,8 @@ const CategoryManager: React.FC = () => {
       return;
     }
 
-    const categoryError = validateField(subcategoryCategoryId, [
-      required("Please select a category."),
-    ]);
-    if (categoryError) {
-      toast.error(categoryError);
+    if (!subcategoryCategoryId) {
+      toast.error("Select a parent category.");
       return;
     }
 
@@ -209,10 +206,7 @@ const CategoryManager: React.FC = () => {
     if (editingSubcategory) {
       const { error } = await supabase
         .from("subcategories")
-        .update({
-          name: trimmedName,
-          category_id: subcategoryCategoryId,
-        })
+        .update({ name: trimmedName, category_id: subcategoryCategoryId })
         .eq("id", editingSubcategory.id);
 
       if (error) {
@@ -224,12 +218,9 @@ const CategoryManager: React.FC = () => {
 
       toast.success("Subcategory updated.");
     } else {
-      const { error } = await supabase.from("subcategories").insert([
-        {
-          name: trimmedName,
-          category_id: subcategoryCategoryId,
-        },
-      ]);
+      const { error } = await supabase
+        .from("subcategories")
+        .insert([{ name: trimmedName, category_id: subcategoryCategoryId }]);
 
       if (error) {
         console.error(error);
@@ -256,146 +247,174 @@ const CategoryManager: React.FC = () => {
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget || isDeleting) return;
+
     setIsDeleting(true);
 
-    const tableName = deleteTarget.type === "category" ? "categories" : "subcategories";
-    const { error } = await supabase
-      .from(tableName)
-      .delete()
-      .eq("id", deleteTarget.id);
+    if (deleteTarget.type === "category") {
+      const { error } = await supabase
+        .from("categories")
+        .delete()
+        .eq("id", deleteTarget.id);
 
-    if (error) {
-      console.error(error);
-      toast.error(error.message);
-      setIsDeleting(false);
-      return;
+      if (error) {
+        console.error(error);
+        toast.error(error.message);
+        setIsDeleting(false);
+        return;
+      }
+
+      toast.success("Category deleted.");
+    } else {
+      const { error } = await supabase
+        .from("subcategories")
+        .delete()
+        .eq("id", deleteTarget.id);
+
+      if (error) {
+        console.error(error);
+        toast.error(error.message);
+        setIsDeleting(false);
+        return;
+      }
+
+      toast.success("Subcategory deleted.");
     }
-
-    toast.success(
-      deleteTarget.type === "category" ? "Category deleted." : "Subcategory deleted."
-    );
 
     await refreshData();
     setIsDeleting(false);
     setDeleteTarget(null);
   };
 
+  if (loading) {
+    return (
+      <Layout title="Categories">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-white/40 animate-pulse">Loading categories...</div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
-    <>
-      <Toaster position="top-right" />
-      <div className="relative z-[9999]">
-        <AdminHeader />
-      </div>
+    <Layout title="Categories">
+      <Toaster position="top-center" />
 
-      <div className="min-h-screen bg-neutral-950 text-white font-sans selection:bg-secondary/30">
-        <div className="max-w-7xl mx-auto px-6 py-12">
-          <AdminPageHeader />
-          <header className="flex flex-wrap items-center justify-between gap-4 mb-10">
-            <div>
-              <h1 className="text-4xl font-serif text-white mb-2">Category Manager</h1>
-              <p className="text-white/40">Manage categories and subcategories.</p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={openAddCategoryModal}
-                className="px-5 py-2.5 rounded-full bg-secondary text-black text-sm font-bold uppercase tracking-widest hover:bg-white transition-colors"
-              >
-                Add Category
-              </button>
-              <button
-                onClick={() => openAddSubcategoryModal()}
-                className="px-5 py-2.5 rounded-full border border-white/10 text-white text-sm font-bold uppercase tracking-widest hover:border-white/30 transition-colors"
-              >
-                Add Subcategory
-              </button>
-            </div>
-          </header>
+      <div className="space-y-6">
+        {/* Header Actions */}
+        <div className="flex flex-wrap gap-3 justify-between items-center">
+          <p className="text-sm text-white/50">
+            Manage menu categories and subcategories
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={openAddCategoryModal}
+              className="flex items-center gap-2 px-4 py-2.5 bg-white text-black rounded-xl text-sm font-semibold hover:bg-white/90 transition-all shadow-lg"
+            >
+              <Plus size={16} />
+              New Category
+            </button>
+            <button
+              onClick={() => openAddSubcategoryModal()}
+              className="flex items-center gap-2 px-4 py-2.5 bg-white/10 border border-white/10 text-white rounded-xl text-sm font-semibold hover:bg-white/20 transition-all"
+            >
+              <Plus size={16} />
+              New Subcategory
+            </button>
+          </div>
+        </div>
 
-          <AdminTabs />
-
-          <div className="rounded-2xl border border-white/10 overflow-hidden bg-white/[0.01]">
+        {/* Categories Table */}
+        <Card>
+          <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-white/5 bg-white/[0.02]">
-                  <th className="py-4 px-6 text-xs font-semibold uppercase tracking-widest text-white/40">
-                    Category
+                <tr className="border-b border-white/5">
+                  <th className="px-6 py-4 text-xs font-semibold text-white/40 uppercase tracking-wider">
+                    Category Name
                   </th>
-                  <th className="py-4 px-6 text-xs font-semibold uppercase tracking-widest text-white/40">
+                  <th className="px-6 py-4 text-xs font-semibold text-white/40 uppercase tracking-wider">
                     Subcategories
                   </th>
-                  <th className="py-4 px-6 text-xs font-semibold uppercase tracking-widest text-white/40 text-right">
+                  <th className="px-6 py-4 text-xs font-semibold text-white/40 uppercase tracking-wider text-right">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody>
-                {loading ? (
+              <tbody className="divide-y divide-white/5">
+                {categories.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="py-8 text-center text-white/50">
-                      Loading categories...
-                    </td>
-                  </tr>
-                ) : categories.length === 0 ? (
-                  <tr>
-                    <td colSpan={3} className="py-8 text-center text-white/50">
-                      No categories found.
+                    <td colSpan={3} className="px-6 py-12 text-center text-white/30 text-sm">
+                      No categories found. Click "New Category" to create one.
                     </td>
                   </tr>
                 ) : (
                   categories.map((category) => {
-                    const relatedSubcategories =
-                      subcategoriesByCategory.get(category.id) ?? [];
+                    const relatedSubcategories = subcategoriesByCategory.get(category.id) || [];
                     return (
                       <tr
                         key={category.id}
-                        className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
+                        className="hover:bg-white/[0.02] transition-colors"
                       >
-                        <td className="py-4 px-6 text-sm font-semibold text-white/90 align-top">
+                        <td className="px-6 py-5 text-sm font-semibold text-white/90 align-top">
                           {category.name ?? "Unnamed Category"}
                         </td>
-                        <td className="py-4 px-6 align-top">
+                        <td className="px-6 py-5 align-top">
                           {relatedSubcategories.length === 0 ? (
-                            <span className="text-sm text-white/40">No subcategories</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-white/30 italic">No subcategories</span>
+                              <button
+                                onClick={() => openAddSubcategoryModal(category.id)}
+                                className="text-xs text-white/40 hover:text-white px-2 py-1 rounded hover:bg-white/5 transition-all"
+                              >
+                                + Add
+                              </button>
+                            </div>
                           ) : (
                             <div className="flex flex-wrap gap-2">
                               {relatedSubcategories.map((subcategory) => (
                                 <div
                                   key={subcategory.id}
-                                  className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs"
+                                  className="group flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs transition-colors hover:border-white/20 hover:bg-white/[0.05]"
                                 >
-                                  <span className="text-white/80">
+                                  <span className="text-white/80 font-medium">
                                     {subcategory.name ?? "Unnamed"}
                                   </span>
-                                  <button
-                                    onClick={() => openEditSubcategoryModal(subcategory)}
-                                    className="text-[10px] uppercase tracking-widest text-white/50 hover:text-white transition-colors"
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    onClick={() => requestDeleteSubcategory(subcategory)}
-                                    className="text-[10px] uppercase tracking-widest text-red-300 hover:text-red-200 transition-colors"
-                                  >
-                                    Delete
-                                  </button>
+                                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-1 border-l border-white/10 pl-2">
+                                    <button
+                                      onClick={() => openEditSubcategoryModal(subcategory)}
+                                      className="p-1 text-white/40 hover:text-white transition-colors"
+                                      title="Edit"
+                                    >
+                                      <Edit2 size={12} />
+                                    </button>
+                                    <button
+                                      onClick={() => requestDeleteSubcategory(subcategory)}
+                                      className="p-1 text-white/40 hover:text-red-400 transition-colors"
+                                      title="Delete"
+                                    >
+                                      <Trash2 size={12} />
+                                    </button>
+                                  </div>
                                 </div>
                               ))}
                             </div>
                           )}
                         </td>
-                        <td className="py-4 px-6 text-right align-top">
+                        <td className="px-6 py-5 text-right align-top">
                           <div className="inline-flex gap-2">
                             <button
                               onClick={() => openEditCategoryModal(category)}
-                              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-gray-900 hover:bg-gray-100 transition-colors"
+                              className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                              title="Edit category"
                             >
-                              Edit
+                              <Edit2 size={16} />
                             </button>
                             <button
                               onClick={() => requestDeleteCategory(category)}
-                              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white transition-colors"
+                              className="p-2 text-white/60 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                              title="Delete category"
                             >
-                              Delete
+                              <Trash2 size={16} />
                             </button>
                           </div>
                         </td>
@@ -406,47 +425,57 @@ const CategoryManager: React.FC = () => {
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       </div>
 
+      {/* Category Modal */}
       {categoryModalOpen && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center px-6 z-[99999]">
-          <div className="w-full max-w-lg rounded-2xl bg-neutral-900 border border-white/10 p-8">
-            <h2 className="text-2xl font-serif text-white mb-6">
-              {editingCategory ? "Edit Category" : "Add Category"}
-            </h2>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center px-4 z-[99999]">
+          <div className="w-full max-w-md rounded-2xl bg-neutral-900 border border-white/10 p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold">
+                {editingCategory ? "Edit Category" : "Add Category"}
+              </h2>
+              <button
+                onClick={closeCategoryModal}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                disabled={isSubmitting}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
             <form onSubmit={handleCategorySubmit} className="space-y-4">
               <div>
-                <label className="text-xs uppercase tracking-widest text-white/50">Name</label>
+                <label className="block text-xs font-medium text-white/50 mb-2">
+                  Category Name
+                </label>
                 <input
                   type="text"
                   value={categoryName}
-                  onChange={(event) => setCategoryName(event.target.value)}
-                  className="mt-2 w-full rounded-lg bg-neutral-950 border border-white/10 px-4 py-2 text-sm text-white"
+                  onChange={(e) => setCategoryName(e.target.value)}
+                  className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition-colors"
+                  placeholder="e.g., Starters, Main Course"
                   required
+                  autoFocus
                 />
               </div>
-              <div className="flex justify-end gap-3 pt-4">
+
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={closeCategoryModal}
-                  className="px-4 py-2 rounded-lg text-sm font-bold text-white/70 hover:text-white"
+                  disabled={isSubmitting}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 rounded-xl transition-all disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2 rounded-lg text-sm font-bold bg-secondary text-black hover:bg-white transition-colors disabled:opacity-60"
+                  className="flex-1 px-4 py-2.5 text-sm font-semibold bg-white text-black rounded-xl hover:bg-white/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? (
-                    <span className="inline-flex items-center gap-2">
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/40 border-t-black" />
-                      Saving...
-                    </span>
-                  ) : (
-                    "Save"
-                  )}
+                  {isSubmitting ? "Saving..." : "Save"}
                 </button>
               </div>
             </form>
@@ -454,62 +483,73 @@ const CategoryManager: React.FC = () => {
         </div>
       )}
 
+      {/* Subcategory Modal */}
       {subcategoryModalOpen && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center px-6 z-[99999]">
-          <div className="w-full max-w-lg rounded-2xl bg-neutral-900 border border-white/10 p-8">
-            <h2 className="text-2xl font-serif text-white mb-6">
-              {editingSubcategory ? "Edit Subcategory" : "Add Subcategory"}
-            </h2>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center px-4 z-[99999]">
+          <div className="w-full max-w-md rounded-2xl bg-neutral-900 border border-white/10 p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold">
+                {editingSubcategory ? "Edit Subcategory" : "Add Subcategory"}
+              </h2>
+              <button
+                onClick={closeSubcategoryModal}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                disabled={isSubmitting}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
             <form onSubmit={handleSubcategorySubmit} className="space-y-4">
               <div>
-                <label className="text-xs uppercase tracking-widest text-white/50">Name</label>
+                <label className="block text-xs font-medium text-white/50 mb-2">
+                  Subcategory Name
+                </label>
                 <input
                   type="text"
                   value={subcategoryName}
-                  onChange={(event) => setSubcategoryName(event.target.value)}
-                  className="mt-2 w-full rounded-lg bg-neutral-950 border border-white/10 px-4 py-2 text-sm text-white"
+                  onChange={(e) => setSubcategoryName(e.target.value)}
+                  className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition-colors"
+                  placeholder="e.g., Vegetarian, Non-Veg"
                   required
+                  autoFocus
                 />
               </div>
+
               <div>
-                <label className="text-xs uppercase tracking-widest text-white/50">
-                  Category
+                <label className="block text-xs font-medium text-white/50 mb-2">
+                  Parent Category
                 </label>
                 <select
                   value={subcategoryCategoryId}
-                  onChange={(event) => setSubcategoryCategoryId(event.target.value)}
-                  className="mt-2 w-full rounded-lg bg-neutral-950 border border-white/10 px-4 py-2 text-sm text-white"
+                  onChange={(e) => setSubcategoryCategoryId(e.target.value)}
+                  className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white focus:outline-none focus:border-white/30 transition-colors appearance-none"
                   required
                 >
                   <option value="">Select category</option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>
-                      {category.name ?? "Unnamed Category"}
+                      {category.name}
                     </option>
                   ))}
                 </select>
               </div>
-              <div className="flex justify-end gap-3 pt-4">
+
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={closeSubcategoryModal}
-                  className="px-4 py-2 rounded-lg text-sm font-bold text-white/70 hover:text-white"
+                  disabled={isSubmitting}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 rounded-xl transition-all disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2 rounded-lg text-sm font-bold bg-secondary text-black hover:bg-white transition-colors disabled:opacity-60"
+                  className="flex-1 px-4 py-2.5 text-sm font-semibold bg-white text-black rounded-xl hover:bg-white/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? (
-                    <span className="inline-flex items-center gap-2">
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/40 border-t-black" />
-                      Saving...
-                    </span>
-                  ) : (
-                    "Save"
-                  )}
+                  {isSubmitting ? "Saving..." : "Save"}
                 </button>
               </div>
             </form>
@@ -517,25 +557,27 @@ const CategoryManager: React.FC = () => {
         </div>
       )}
 
+      {/* Delete Confirmation Modal */}
       {deleteTarget && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center px-6 z-[99999]">
-          <div className="w-full max-w-md rounded-2xl bg-neutral-900 border border-white/10 p-6">
-            <h2 className="text-xl font-serif text-white mb-3">
-              {deleteTarget.type === "category" ? "Delete Category" : "Delete Subcategory"}
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center px-4 z-[99999]">
+          <div className="w-full max-w-md rounded-2xl bg-neutral-900 border border-white/10 p-6 shadow-2xl">
+            <h2 className="text-xl font-semibold mb-4">
+              Delete {deleteTarget.type === "category" ? "Category" : "Subcategory"}
             </h2>
-            <p className="text-sm text-white/60">
+            <p className="text-sm text-white/60 mb-6">
               Are you sure you want to delete{" "}
-              <span className="text-white/90 font-semibold">
+              <span className="text-white font-semibold">
                 {deleteTarget.name ?? "this item"}
               </span>
               ? This action cannot be undone.
             </p>
-            <div className="flex justify-end gap-3 pt-6">
+
+            <div className="flex gap-3">
               <button
                 type="button"
                 onClick={() => setDeleteTarget(null)}
                 disabled={isDeleting}
-                className="px-4 py-2 rounded-lg text-sm font-bold text-white/70 hover:text-white disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 rounded-xl transition-all disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -543,7 +585,7 @@ const CategoryManager: React.FC = () => {
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={isDeleting}
-                className="px-4 py-2 rounded-lg text-sm font-bold bg-red-500 text-white hover:bg-red-400 transition-colors disabled:opacity-60"
+                className="flex-1 px-4 py-2.5 text-sm font-semibold bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isDeleting ? "Deleting..." : "Delete"}
               </button>
@@ -551,7 +593,7 @@ const CategoryManager: React.FC = () => {
           </div>
         </div>
       )}
-    </>
+    </Layout>
   );
 };
 
