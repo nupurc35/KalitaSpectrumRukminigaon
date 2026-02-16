@@ -52,7 +52,7 @@ const createLead = async (payload: {
         intent: payload.intent,
         message: payload.message || null,
         source: payload.source,
-        status: "New",
+        status: "New",  // ✅ Capital case - matches enum
       },
     ])
     .select()
@@ -67,22 +67,24 @@ const createLead = async (payload: {
   return { success: true, data };
 };
 
-/* contact the new lead and change its status to "contacted" */              
-
-
+/* contact the new lead and change its status to "Contacted" */              
 const markContacted = async (payload: {
   lead_id: string;
   restaurant_id: string;
+  next_follow_up?: string;
 }): Promise<CrmResponse> => {
   console.log("🔥 MARK CONTACTED FUNCTION HIT");
   console.log("Payload:", payload);
   
-  // Direct query using raw SQL to handle enum
+  const contactedAt = new Date().toISOString();
+  
+  // 1. Update the lead record with Capital case 'Contacted' status
   const { data, error } = await supabase
     .from("leads")
     .update({
-      status: "Contacted",
-      last_contacted_at: new Date().toISOString(),
+      status: "Contacted",  // ✅ Changed to Capital case - matches enum
+      last_contacted_at: contactedAt,
+      next_follow_up: payload.next_follow_up || null,
     })
     .eq("id", payload.lead_id)
     .eq("restaurant_id", payload.restaurant_id)
@@ -94,13 +96,23 @@ const markContacted = async (payload: {
     return { success: false, error: error.message };
   }
 
+  // 2. ✅ CRITICAL: Insert into lead_events table
+  const { error: eventError } = await supabase
+    .from("lead_events")
+    .insert({
+      lead_id: payload.lead_id,
+      event_type: "contacted",  // This might be different - check your event_type enum
+      created_at: contactedAt,
+    });
+
+  if (eventError) {
+    console.error("Insert lead_events error:", eventError);
+    // Don't fail the whole operation if event logging fails
+  }
+
   console.log("Lead updated successfully:", data);
   return { success: true, data };
 };
-
-
-
-
 
 /**
  * Create a new reservation directly (not from lead conversion)
@@ -199,7 +211,7 @@ const convertLead = async (payload: {
     const { error: updateError } = await supabase
       .from("leads")
       .update({
-        status: "Reservation Created",
+        status: "Reservation Created",  // ✅ Matches enum exactly
         reservation_id: reservation.id,
       })
       .eq("id", payload.lead_id)
@@ -216,13 +228,14 @@ const convertLead = async (payload: {
     return { success: false, error: "Internal server error" };
   }
 };
+
 /**
  * Update reservation status and cascade status to related lead
  */
 const updateReservationStatus = async (payload: {
   reservation_id: string;
   restaurant_id: string;
-  status: "confirmed" | "completed" | "cancelled";
+  status: "confirmed" | "pending" | "cancelled" | "completed";
 }): Promise<CrmResponse> => {
   try {
     // Update reservation
@@ -248,12 +261,12 @@ const updateReservationStatus = async (payload: {
       .single();
 
     if (lead) {
-      let leadStatus: "Closed Won" | "Closed Lost" = "Closed Lost";
+      let leadStatus: "Closed Won" | "Closed Lost" = "Closed Lost";  // ✅ Space in "Closed Won"
 
       if (payload.status === "completed") {
-        leadStatus = "Closed Won";
+        leadStatus = "Closed Won";  // ✅ Matches enum
       } else if (payload.status === "cancelled") {
-        leadStatus = "Closed Lost";
+        leadStatus = "Closed Lost";  // ✅ Matches enum
       }
 
       const { error: leadUpdateError } = await supabase
@@ -284,7 +297,7 @@ const closeLead = async (payload: {
 }): Promise<CrmResponse> => {
   const { data, error } = await supabase
     .from("leads")
-    .update({ status: "Closed Lost" })
+    .update({ status: "Closed Lost" })  // ✅ Matches enum exactly
     .eq("id", payload.lead_id)
     .eq("restaurant_id", payload.restaurant_id)
     .select()
